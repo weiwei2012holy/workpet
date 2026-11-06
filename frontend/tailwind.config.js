@@ -47,6 +47,19 @@ export default {
         border: "var(--border)",
         input: "var(--input)",
         ring: "var(--ring)",
+        state: {
+          working: "var(--state-working)",
+          alerting: "var(--state-alerting)",
+          away: "var(--state-away)",
+          offduty: "var(--state-offduty)",
+          paused: "var(--state-paused)",
+          ready: "var(--state-ready)",
+        },
+        traffic: {
+          close: "var(--traffic-close)",
+          minimize: "var(--traffic-minimize)",
+          maximize: "var(--traffic-maximize)",
+        },
         chart: {
           1: "var(--chart-1)",
           2: "var(--chart-2)",

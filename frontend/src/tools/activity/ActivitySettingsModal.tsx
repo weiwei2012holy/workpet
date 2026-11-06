@@ -130,7 +130,7 @@ export const ActivitySettingsModal: React.FC<ActivitySettingsModalProps> = ({
           {/* 2. 离座空闲检测阈值 */}
           <div className="flex flex-col gap-2">
             <label className="flex items-center gap-2 text-xs font-semibold text-foreground">
-              <UserCheck className="size-4 text-[#64b5f6]" />
+              <UserCheck className="size-4 text-state-away" />
               连续无操作判定为离开工位短休（分钟）
             </label>
             <div className="grid grid-cols-4 gap-2">
@@ -141,7 +141,7 @@ export const ActivitySettingsModal: React.FC<ActivitySettingsModalProps> = ({
                   onClick={() => setIdleThresholdVal(mins)}
                   className={`py-2 rounded-lg text-xs font-semibold border transition-all ${
                     idleThreshold === mins
-                      ? "bg-[#64b5f6] text-[#0f0f1a] font-bold border-[#64b5f6] shadow-sm"
+                      ? "bg-state-away text-primary-foreground font-bold border-state-away shadow-sm"
                       : "bg-muted text-muted-foreground border-border hover:text-foreground"
                   }`}
                 >
@@ -157,7 +157,7 @@ export const ActivitySettingsModal: React.FC<ActivitySettingsModalProps> = ({
           {/* 3. 午休 / 下班长时间离座排除阈值 */}
           <div className="flex flex-col gap-2 pt-2 border-t border-border/60">
             <label className="flex items-center gap-2 text-xs font-semibold text-foreground">
-              <Moon className="size-4 text-[#a855f7]" />
+              <Moon className="size-4 text-state-offduty" />
               长时间离座判定为午休或下班（分钟）
             </label>
             <div className="grid grid-cols-4 gap-2">
@@ -171,7 +171,7 @@ export const ActivitySettingsModal: React.FC<ActivitySettingsModalProps> = ({
                   }}
                   className={`py-2 rounded-lg text-xs font-semibold border transition-all ${
                     offDutyThreshold === mins && !customOffDuty
-                      ? "bg-[#a855f7] text-white font-bold border-[#a855f7] shadow-sm"
+                      ? "bg-state-offduty text-primary-foreground font-bold border-state-offduty shadow-sm"
                       : "bg-muted text-muted-foreground border-border hover:text-foreground"
                   }`}
                 >
@@ -186,7 +186,7 @@ export const ActivitySettingsModal: React.FC<ActivitySettingsModalProps> = ({
                 placeholder="5 ~ 240"
                 value={customOffDuty}
                 onChange={(e) => setCustomOffDuty(e.target.value)}
-                className="w-24 px-3 py-1.5 rounded-md bg-muted border border-border text-xs text-foreground placeholder-muted-foreground outline-none focus:border-[#a855f7]"
+                className="w-24 px-3 py-1.5 rounded-md bg-muted border border-border text-xs text-foreground placeholder-muted-foreground outline-none focus:border-state-offduty"
               />
               <span className="text-xs text-muted-foreground">分钟</span>
             </div>

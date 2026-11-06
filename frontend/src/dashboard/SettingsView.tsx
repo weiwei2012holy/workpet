@@ -142,7 +142,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       {/* 提示信息 */}
       {tipMessage && (
         <div className="p-3.5 rounded-lg bg-primary/10 border border-primary/30 text-sm text-foreground flex items-center gap-2.5 shadow-sm">
-          <CheckCircle2 size={16} className="text-[#4db6ac]" />
+          <CheckCircle2 size={16} className="text-state-ready" />
           <span>{tipMessage}</span>
         </div>
       )}
@@ -193,7 +193,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   : "bg-muted/40 border-border text-muted-foreground hover:bg-muted"
               }`}
             >
-              <Sun size={18} className={themeMode === "light" ? "text-[#febc2e]" : ""} />
+              <Sun size={18} className={themeMode === "light" ? "text-state-paused" : ""} />
               <span>白天浅色模式</span>
             </button>
 
@@ -322,7 +322,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 </p>
                 {updateFeedback && (
                   <p className="text-xs text-primary font-medium mt-1 flex items-center gap-1">
-                    <CheckCircle2 size={13} className="text-[#4db6ac]" />
+                    <CheckCircle2 size={13} className="text-state-ready" />
                     <span>{updateFeedback}</span>
                   </p>
                 )}

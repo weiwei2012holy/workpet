@@ -21,7 +21,7 @@ export interface ActivityStats {
     "restCount": number;
 
     /**
-     * "working" | "reminding" | "away" | "paused"
+     * "working" | "reminding" | "away" | "paused" | "offduty"
      */
     "currentState": string;
 
@@ -37,7 +37,7 @@ export interface ActivityStats {
 }
 
 /**
- * ReminderState 表示前端同步的状态数据模型
+ * ReminderState 前端同步的专注与休息实时状态数据模型
  */
 export interface ReminderState {
     /**

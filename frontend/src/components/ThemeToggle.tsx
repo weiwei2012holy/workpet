@@ -64,7 +64,7 @@ export const ThemeToggle: React.FC = () => {
       ) : mode === "dark" ? (
         <Moon size={14} className="text-primary" />
       ) : (
-        <Sun size={14} className="text-[#febc2e]" />
+        <Sun size={14} className="text-state-paused" />
       )}
       <span className="font-medium text-[11px]">{getLabel()}</span>
     </Button>

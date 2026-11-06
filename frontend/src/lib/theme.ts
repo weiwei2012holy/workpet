@@ -75,35 +75,76 @@ export function applyThemeMode(mode: ThemeMode): "dark" | "light" {
   return effective;
 }
 
-// 保存并生效新的模式
-export function setThemeMode(mode: ThemeMode): "dark" | "light" {
-  localStorage.setItem(THEME_MODE_STORAGE_KEY, mode);
-  return applyThemeMode(mode);
+// ==================== 主题订阅注册表（单例与幂等保证） ====================
+
+export type ThemeChangeCallback = (effective: "dark" | "light", mode: ThemeMode) => void;
+
+const listeners = new Set<ThemeChangeCallback>();
+let isMediaListenerInitialized = false;
+
+// 派发主题变动通知给所有监听组件
+function notifyThemeListeners(effective: "dark" | "light", mode: ThemeMode): void {
+  listeners.forEach((callback) => {
+    try {
+      callback(effective, mode);
+    } catch (e) {
+      console.error("[Theme] 回调执行异常:", e);
+    }
+  });
 }
 
-// 初始化全局主题监听器（监听系统明暗变化）
-export function initThemeListener(onChange?: (effective: "dark" | "light", mode: ThemeMode) => void) {
+// 确保底层的系统明暗媒体查询监听器单例初始化（全生命周期只添加一次）
+function ensureSystemMediaListener(): void {
+  if (isMediaListenerInitialized || typeof window === "undefined" || !window.matchMedia) {
+    return;
+  }
+  isMediaListenerInitialized = true;
+
+  const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+  const handleSystemChange = () => {
+    const mode = getStoredThemeMode();
+    if (mode === "system") {
+      const effective = applyThemeMode("system");
+      notifyThemeListeners(effective, "system");
+    }
+  };
+
+  if (mediaQuery.addEventListener) {
+    mediaQuery.addEventListener("change", handleSystemChange);
+  } else {
+    // 兼容旧版 Safari / WebKit
+    mediaQuery.addListener(handleSystemChange);
+  }
+}
+
+// 保存并生效新的模式，同时主动广播给所有订阅者
+export function setThemeMode(mode: ThemeMode): "dark" | "light" {
+  localStorage.setItem(THEME_MODE_STORAGE_KEY, mode);
+  const effective = applyThemeMode(mode);
+  notifyThemeListeners(effective, mode);
+  return effective;
+}
+
+/**
+ * 订阅主题变化监听（幂等单例保护，支持多组件安全共存与独立 cleanup）
+ * @param onChange 模式或明暗状态变化回调（可选）
+ * @returns 专属注销清理函数
+ */
+export function initThemeListener(onChange?: ThemeChangeCallback): () => void {
+  // 1. 确保全局系统偏好媒体查询只监听一次
+  ensureSystemMediaListener();
+
+  // 2. 确保当前存储的主题已应用到 DOM 根节点
   const currentMode = getStoredThemeMode();
   applyThemeMode(currentMode);
 
-  if (typeof window !== "undefined" && window.matchMedia) {
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    const handler = () => {
-      const mode = getStoredThemeMode();
-      if (mode === "system") {
-        const effective = applyThemeMode("system");
-        onChange?.(effective, "system");
-      }
+  // 3. 注册组件私有回调
+  if (onChange) {
+    listeners.add(onChange);
+    return () => {
+      listeners.delete(onChange);
     };
-
-    // 现代浏览器与 WebKit 监听器
-    if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener("change", handler);
-      return () => mediaQuery.removeEventListener("change", handler);
-    } else {
-      mediaQuery.addListener(handler);
-      return () => mediaQuery.removeListener(handler);
-    }
   }
+
   return () => {};
 }

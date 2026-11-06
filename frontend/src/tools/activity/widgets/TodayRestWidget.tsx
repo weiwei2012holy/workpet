@@ -25,11 +25,11 @@ export const TodayRestWidget: React.FC<TodayRestWidgetProps> = ({
   restCount = 0,
 }) => {
   return (
-    <Card className="flex flex-col justify-between h-[180px] p-5 border-border bg-card shadow-sm hover:border-[#64b5f6]/50 transition-all">
+    <Card className="flex flex-col justify-between h-[180px] p-5 border-border bg-card shadow-sm hover:border-state-away/50 transition-all">
       {/* 头部：CardHeader 与 CardTitle 复合规范 */}
       <CardHeader className="p-0 flex flex-row items-center justify-between space-y-0">
         <div className="flex items-center gap-2.5">
-          <div className="size-8 rounded-lg bg-[#64b5f6]/15 border border-[#64b5f6]/25 flex items-center justify-center text-[#64b5f6]">
+          <div className="size-8 rounded-lg bg-state-away/15 border border-state-away/25 flex items-center justify-center text-state-away">
             <Coffee className="size-4.5" />
           </div>
           <CardTitle className="text-base font-semibold text-foreground">
@@ -38,7 +38,7 @@ export const TodayRestWidget: React.FC<TodayRestWidgetProps> = ({
         </div>
 
         <Badge variant="away" className="flex items-center gap-1 text-xs px-2.5 py-0.5 font-mono">
-          <HeartPulse className="size-3 text-[#64b5f6]" />
+          <HeartPulse className="size-3 text-state-away" />
           <span>{restCount} 次</span>
         </Badge>
       </CardHeader>
@@ -46,7 +46,7 @@ export const TodayRestWidget: React.FC<TodayRestWidgetProps> = ({
       {/* 核心大指标值内容区 */}
       <CardContent className="p-0 my-auto py-1">
         <div className="flex items-baseline gap-1.5 font-mono">
-          <span className="text-3xl font-extrabold tracking-tight text-[#64b5f6]">
+          <span className="text-3xl font-extrabold tracking-tight text-state-away">
             {restMinutes}
           </span>
           <span className="text-sm font-semibold text-muted-foreground">分钟</span>

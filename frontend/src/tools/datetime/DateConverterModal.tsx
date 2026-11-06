@@ -167,13 +167,13 @@ export const DateConverterModal: React.FC<DateConverterModalProps> = ({
       key: "unixSeconds",
       name: "时间戳 (秒)",
       value: formats.unixSeconds,
-      icon: <Database className="size-4 text-[#ff79c6]" />,
+      icon: <Database className="size-4 text-primary" />,
     },
     {
       key: "unixMillis",
       name: "时间戳 (毫秒)",
       value: formats.unixMillis,
-      icon: <Database className="size-4 text-[#bd93f9]" />,
+      icon: <Database className="size-4 text-state-working" />,
     },
     {
       key: "localStandard",
@@ -185,13 +185,13 @@ export const DateConverterModal: React.FC<DateConverterModalProps> = ({
       key: "sqlFormat",
       name: "本地时间 (含毫秒)",
       value: formats.sqlFormat,
-      icon: <Calendar className="size-4 text-[#4db6ac]" />,
+      icon: <Calendar className="size-4 text-state-ready" />,
     },
     {
       key: "isoLocal",
       name: "ISO 8601",
       value: formats.isoLocal,
-      icon: <Globe className="size-4 text-[#64b5f6]" />,
+      icon: <Globe className="size-4 text-state-away" />,
     },
     {
       key: "isoUtc",
@@ -203,7 +203,7 @@ export const DateConverterModal: React.FC<DateConverterModalProps> = ({
       key: "relative",
       name: "相对时间",
       value: formats.relative,
-      icon: <Sparkles className="size-4 text-[#fbbf24]" />,
+      icon: <Sparkles className="size-4 text-state-paused" />,
     },
     {
       key: "rfc7231",

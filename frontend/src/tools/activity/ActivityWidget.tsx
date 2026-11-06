@@ -8,6 +8,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Play, Pause, RotateCcw, Check, Sparkles } from "lucide-react";
 import SwipeToast, { SwipeToastCloseReason } from "@/components/SwipeToast";
 import { Service as ActivityService } from "../../../bindings/workpet/pkg/tools/activity";
+import * as SystemService from "../../../bindings/workpet/pkg/system/service";
 import { ReminderState } from "../../../bindings/workpet/pkg/tools/activity/models";
 import { APP_EVENTS, subscribeEvent } from "@/types/events";
 
@@ -100,7 +101,7 @@ export default function ActivityWidget() {
         return; // 用户刚才是在拖动窗口位置，拦截单击误触
       }
     }
-    ActivityService.OpenDashboard();
+    SystemService.OpenDashboard();
   };
 
   // 唤起与数据刷新自愈
@@ -197,27 +198,31 @@ export default function ActivityWidget() {
 
   // 操作处理
   const handleAcknowledge = async () => {
-    const updated = await ActivityService.AcknowledgeRest();
-    setState(updated);
+    await ActivityService.Acknowledge();
+    const updated = await ActivityService.GetState();
+    if (updated) setState(updated);
     setOpen(false);
   };
 
   const handleSnooze = async (minutes: number) => {
-    const updated = await ActivityService.Snooze(minutes);
-    setState(updated);
+    await ActivityService.Snooze(minutes);
+    const updated = await ActivityService.GetState();
+    if (updated) setState(updated);
     setOpen(false);
   };
 
   const handleTogglePause = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    const updated = await ActivityService.TogglePause();
-    setState(updated);
+    await ActivityService.TogglePause();
+    const updated = await ActivityService.GetState();
+    if (updated) setState(updated);
   };
 
   const handleReset = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    const updated = await ActivityService.ResetTimer();
-    setState(updated);
+    await ActivityService.Reset();
+    const updated = await ActivityService.GetState();
+    if (updated) setState(updated);
   };
 
   // 计算展示时间
@@ -228,14 +233,14 @@ export default function ActivityWidget() {
   const totalTargetSecs = Math.max(1, state.intervalMinutes * 60);
   const progressPercent = Math.min(100, Math.max(0, (state.elapsedSeconds / totalTargetSecs) * 100));
 
-  // 经典紫夜流光色彩（与老版本完全一致）
+  // 业务状态色彩 Tokens
   const fuseColor = state.isReminding
-    ? "#ff5470"
+    ? "var(--state-alerting)"
     : state.isAway
-    ? "#64b5f6"
+    ? "var(--state-away)"
     : state.isPaused
-    ? "#fbbf24"
-    : "#c084fc";
+    ? "var(--state-paused)"
+    : "var(--state-working)";
 
   return (
     <div className="w-full h-full flex items-center justify-center p-0 m-0 select-none bg-transparent overflow-hidden">
@@ -252,7 +257,7 @@ export default function ActivityWidget() {
         duration={0} /* 窗口常驻，支持按键或失焦收起 */
         fuse="bottom"
         fuseColor={fuseColor}
-        color="#ffffff"
+        color="currentColor"
         pauseOnHover={true}
         closeButton={false}
         className={state.isReminding ? "is-alerting" : ""}
@@ -275,7 +280,7 @@ export default function ActivityWidget() {
                   ? "bg-sky-500/20 text-sky-400 border border-sky-500/35"
                   : state.isPaused
                   ? "bg-amber-500/20 text-amber-400 border border-amber-500/35"
-                  : "bg-[#c084fc]/15 text-[#fdf4ff] border border-[#c084fc]/30"
+                  : "bg-state-working/15 text-primary-foreground border border-state-working/30"
               }`}
             >
               {state.isReminding
@@ -308,7 +313,7 @@ export default function ActivityWidget() {
                     ? "text-sky-400"
                     : state.isPaused
                     ? "text-amber-400"
-                    : "text-white group-hover/timer:text-[#c084fc]"
+                    : "text-white group-hover/timer:text-state-working"
                 }`}
               >
                 {state.isReminding ? "00:00" : timeFormatted}
@@ -342,7 +347,7 @@ export default function ActivityWidget() {
                     ? "bg-sky-400"
                     : state.isPaused
                     ? "bg-amber-400"
-                    : "bg-gradient-to-r from-[#c084fc] via-[#a855f7] to-[#e879f9]"
+                    : "bg-gradient-to-r from-state-working via-state-offduty to-primary"
                 }`}
                 style={{
                   width: `${state.isReminding || state.isOffDuty ? 100 : progressPercent}%`,
@@ -361,7 +366,7 @@ export default function ActivityWidget() {
                 <button
                   type="button"
                   onClick={handleAcknowledge}
-                  className="h-8 px-3 rounded-lg bg-[#4db6ac] hover:bg-[#39a096] text-white text-xs font-semibold flex items-center gap-1 shadow-md transition-transform active:scale-95"
+                  className="h-8 px-3 rounded-lg bg-state-ready hover:bg-state-ready/90 text-primary-foreground text-xs font-semibold flex items-center gap-1 shadow-md transition-transform active:scale-95"
                   title="已起身活动，重新开启计时"
                 >
                   <Check size={13} strokeWidth={3} />
@@ -370,7 +375,7 @@ export default function ActivityWidget() {
                 <button
                   type="button"
                   onClick={() => handleSnooze(5)}
-                  className="h-8 px-2.5 rounded-lg bg-white/10 hover:bg-white/15 text-[#fdf4ff] text-xs font-medium border border-white/15 transition-transform active:scale-95"
+                  className="h-8 px-2.5 rounded-lg bg-white/10 hover:bg-white/15 text-primary-foreground text-xs font-medium border border-white/15 transition-transform active:scale-95"
                   title="稍后 5 分钟提醒"
                 >
                   +5m
@@ -385,7 +390,7 @@ export default function ActivityWidget() {
                   className={`h-7 w-7 rounded-lg flex items-center justify-center transition-colors active:scale-95 ${
                     state.isPaused
                       ? "bg-amber-500/25 text-amber-300 hover:bg-amber-500/35"
-                      : "text-[#d8b4fe] hover:text-white hover:bg-white/10"
+                      : "text-state-working/90 hover:text-white hover:bg-white/10"
                   }`}
                   title={state.isPaused ? "继续计时" : "暂停计时"}
                 >
@@ -396,7 +401,7 @@ export default function ActivityWidget() {
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="h-7 w-7 rounded-lg text-[#d8b4fe] hover:text-white hover:bg-white/10 flex items-center justify-center transition-colors active:scale-95"
+                  className="h-7 w-7 rounded-lg text-state-working/90 hover:text-white hover:bg-white/10 flex items-center justify-center transition-colors active:scale-95"
                   title="重置当前周期"
                 >
                   <RotateCcw size={13} />
@@ -406,7 +411,7 @@ export default function ActivityWidget() {
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="h-7 w-7 rounded-lg text-[#d8b4fe]/80 hover:text-white hover:bg-white/10 flex items-center justify-center transition-colors active:scale-95 ml-0.5"
+                  className="h-7 w-7 rounded-lg text-state-working/80 hover:text-white hover:bg-white/10 flex items-center justify-center transition-colors active:scale-95 ml-0.5"
                   title="收起弹窗 (可按 Esc 或直接向下拖拽划走)"
                 >
                   ✕

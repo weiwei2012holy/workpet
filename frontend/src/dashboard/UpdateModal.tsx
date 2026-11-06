@@ -108,7 +108,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
             <div className="flex items-center justify-between text-xs">
               <span className="font-medium text-foreground flex items-center gap-1.5">
                 {isDownloading && <RefreshCw size={14} className="animate-spin text-primary" />}
-                {isReady && <CheckCircle2 size={14} className="text-[#4db6ac]" />}
+                {isReady && <CheckCircle2 size={14} className="text-state-ready" />}
                 {isError && <AlertTriangle size={14} className="text-destructive" />}
                 {isDownloading && "正在下载更新中..."}
                 {isReady && "下载验证完成，新版本已暂存就绪"}
@@ -174,7 +174,7 @@ export const UpdateModal: React.FC<UpdateModalProps> = ({
               variant="default"
               size="sm"
               onClick={handleRestart}
-              className="text-xs bg-[#4db6ac] hover:bg-[#39a096] text-white flex items-center gap-1.5 shadow-md"
+              className="text-xs bg-state-ready hover:bg-state-ready/90 text-primary-foreground flex items-center gap-1.5 shadow-md"
             >
               <RefreshCw size={14} />
               <span>立即重启应用新版本</span>

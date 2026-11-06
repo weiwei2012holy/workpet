@@ -38,42 +38,42 @@ export const ActivityStatusWidget: React.FC<ActivityStatusWidgetProps> = ({
       case "offduty":
         return {
           title: "午休 / 下班",
-          dotColor: "bg-[#a855f7]",
+          dotColor: "bg-state-offduty",
           badgeVariant: "secondary" as const,
-          iconColor: "text-[#a855f7]",
-          bgIcon: "bg-[#a855f7]/15 border-[#a855f7]/25",
+          iconColor: "text-state-offduty",
+          bgIcon: "bg-state-offduty/15 border-state-offduty/25",
         };
       case "reminding":
         return {
           title: "提醒休息",
-          dotColor: "bg-[#ff5470]",
+          dotColor: "bg-state-alerting",
           badgeVariant: "destructive" as const,
-          iconColor: "text-[#ff5470]",
-          bgIcon: "bg-[#ff5470]/15 border-[#ff5470]/25",
+          iconColor: "text-state-alerting",
+          bgIcon: "bg-state-alerting/15 border-state-alerting/25",
         };
       case "away":
         return {
           title: "离座中",
-          dotColor: "bg-[#64b5f6]",
+          dotColor: "bg-state-away",
           badgeVariant: "away" as const,
-          iconColor: "text-[#64b5f6]",
-          bgIcon: "bg-[#64b5f6]/15 border-[#64b5f6]/25",
+          iconColor: "text-state-away",
+          bgIcon: "bg-state-away/15 border-state-away/25",
         };
       case "paused":
         return {
           title: "已暂停",
-          dotColor: "bg-[#fbbf24]",
+          dotColor: "bg-state-paused",
           badgeVariant: "secondary" as const,
-          iconColor: "text-[#fbbf24]",
-          bgIcon: "bg-[#fbbf24]/15 border-[#fbbf24]/25",
+          iconColor: "text-state-paused",
+          bgIcon: "bg-state-paused/15 border-state-paused/25",
         };
       default:
         return {
           title: "专注中",
-          dotColor: "bg-[#4db6ac]",
+          dotColor: "bg-state-ready",
           badgeVariant: "success" as const,
-          iconColor: "text-[#4db6ac]",
-          bgIcon: "bg-[#4db6ac]/15 border-[#4db6ac]/25",
+          iconColor: "text-state-ready",
+          bgIcon: "bg-state-ready/15 border-state-ready/25",
         };
     }
   };
@@ -81,7 +81,7 @@ export const ActivityStatusWidget: React.FC<ActivityStatusWidgetProps> = ({
   const meta = getStateMeta();
 
   return (
-    <Card className="flex flex-col justify-between h-[180px] p-5 border-border bg-card shadow-sm hover:border-[#4db6ac]/50 transition-all">
+    <Card className="flex flex-col justify-between h-[180px] p-5 border-border bg-card shadow-sm hover:border-state-ready/50 transition-all">
       {/* 头部：CardHeader 与 CardTitle 复合规范 */}
       <CardHeader className="p-0 flex flex-row items-center justify-between space-y-0">
         <div className="flex items-center gap-2.5">
@@ -103,7 +103,7 @@ export const ActivityStatusWidget: React.FC<ActivityStatusWidgetProps> = ({
       <CardContent className="p-0 my-auto py-1">
         {isOffDuty ? (
           <div className="flex items-baseline gap-2 font-mono">
-            <span className="text-3xl font-extrabold tracking-tight text-[#a855f7]">
+            <span className="text-3xl font-extrabold tracking-tight text-state-offduty">
               {Math.floor(currentIdleSeconds / 60)}
             </span>
             <span className="text-sm font-semibold text-muted-foreground">分钟空闲 · 不计入统计</span>

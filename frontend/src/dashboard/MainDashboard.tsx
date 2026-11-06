@@ -19,7 +19,6 @@ import { WidgetGalleryModal } from "./WidgetGalleryModal";
 
 import * as SystemService from "@/../bindings/workpet/pkg/system/service";
 import * as ActivityService from "@/../bindings/workpet/pkg/tools/activity/service";
-import { initThemeListener } from "@/lib/theme";
 import {
   APP_EVENTS,
   subscribeEvent,
@@ -73,10 +72,8 @@ export const MainDashboard: React.FC = () => {
     currentIdleSeconds: 0,
   });
 
-  // 1. 初始化拉取后端配置与统计数据及外观主题
+  // 1. 初始化拉取后端配置与统计数据
   useEffect(() => {
-    initThemeListener();
-
     const initData = async () => {
       try {
         const appCfg = await SystemService.GetAppSettings();
@@ -213,21 +210,21 @@ export const MainDashboard: React.FC = () => {
             >
               <button
                 onClick={() => SystemService.CloseDashboard()}
-                className="w-3.5 h-3.5 rounded-full bg-[#ff5f57] border border-[#e0443e] flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-sm"
+                className="size-3.5 rounded-full bg-traffic-close border border-traffic-close/80 flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-sm"
                 title="关闭/隐藏窗口 (Cmd+W)"
               >
                 <X size={8} className="opacity-0 group-hover/traffic:opacity-100 text-black font-bold" />
               </button>
               <button
                 onClick={() => SystemService.MinimizeDashboard()}
-                className="w-3.5 h-3.5 rounded-full bg-[#febc2e] border border-[#d89e24] flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-sm"
+                className="size-3.5 rounded-full bg-traffic-minimize border border-traffic-minimize/80 flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-sm"
                 title="最小化窗口"
               >
                 <Minus size={8} className="opacity-0 group-hover/traffic:opacity-100 text-black font-bold" />
               </button>
               <button
                 onClick={() => SystemService.OpenWidget()}
-                className="w-3.5 h-3.5 rounded-full bg-[#28c840] border border-[#1aab29] flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-sm"
+                className="size-3.5 rounded-full bg-traffic-maximize border border-traffic-maximize/80 flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-sm"
                 title="唤起桌面随行挂件"
               >
                 <ExternalLink size={8} className="opacity-0 group-hover/traffic:opacity-100 text-black font-bold" />

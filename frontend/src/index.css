@@ -38,6 +38,17 @@
     --chart-4: #7c75fa;
     --chart-5: #4740b3;
 
+    /* 业务状态语义化色彩 Tokens (遵循 AGENTS.md 规范) */
+    --state-working: #c084fc;       /* 专注/工作中 */
+    --state-alerting: #ff5470;      /* 提醒/警报中 */
+    --state-away: #64b5f6;          /* 离座/暂离 */
+    --state-offduty: #a855f7;       /* 午休/下班 */
+    --state-paused: #fbbf24;        /* 暂停中 */
+    --state-ready: #4db6ac;         /* 成功/就绪状态 */
+    --traffic-close: #ff5f57;       /* 窗口关闭红 */
+    --traffic-minimize: #febc2e;    /* 窗口最小化黄 */
+    --traffic-maximize: #28c840;    /* 窗口最大化绿 */
+
     /* 随行挂件常驻色彩系统（不受白天黑夜模式破坏） */
     --purple-glow: #c084fc;
     --purple-accent: #a855f7;

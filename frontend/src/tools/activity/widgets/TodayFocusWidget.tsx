@@ -42,7 +42,7 @@ export const TodayFocusWidget: React.FC<TodayFocusWidgetProps> = ({
         </div>
 
         <Badge variant="default" className="flex items-center gap-1 text-xs px-2.5 py-0.5 font-mono">
-          <Flame className="size-3 text-[#ff79c6]" />
+          <Flame className="size-3 text-primary" />
           <span>{progressPercent}%</span>
         </Badge>
       </CardHeader>
