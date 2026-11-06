@@ -1,0 +1,38 @@
+/**
+ * @Author wei
+ * @Date 2026-11-03
+ * @Description React Bits 聚光灯流光卡片样式表，已优化消除 mask 边缘泛白与锯齿毛刺
+ **/
+
+.spotlight-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 18px;
+  background-color: var(--spotlight-card-surface, rgba(13, 15, 22, 0.92));
+}
+
+.spotlight-card__light,
+.spotlight-card__grain {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.spotlight-card__light,
+.spotlight-card__grain {
+  z-index: -1;
+  opacity: 0;
+}
+
+.spotlight-card__grain {
+  background-size: 160px 160px;
+  mix-blend-mode: overlay;
+}
+
+/* 隐藏容易在 WebKit 下引起泛白与锯齿的 mask 边框，统一由外部平滑边框接管 */
+.spotlight-card__border,
+.spotlight-card__edge {
+  display: none !important;
+}

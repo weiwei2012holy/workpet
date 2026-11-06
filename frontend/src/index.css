@@ -1,0 +1,718 @@
+/**
+ * @Author wei
+ * @Date 2026-11-04
+ * @Description 全局样式表，深度实现 Tweakcn Cosmic Night 官方白天 (Light) 与黑夜 (Dark) 双模配色，并支持多主题插槽
+ **/
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* ================= Tweakcn Cosmic Night (白天模式 / Light) ================= */
+    --background: #f5f5ff;
+    --foreground: #2a2a4a;
+    --card: #ffffff;
+    --card-foreground: #2a2a4a;
+    --popover: #ffffff;
+    --popover-foreground: #2a2a4a;
+    --primary: #6e56cf;
+    --primary-foreground: #ffffff;
+    --secondary: #e4dfff;
+    --secondary-foreground: #4a4080;
+    --muted: #f0f0fa;
+    --muted-foreground: #6c6c8a;
+    --accent: #d8e6ff;
+    --accent-foreground: #2a2a4a;
+    --destructive: #ff5470;
+    --destructive-foreground: #ffffff;
+    --border: #e0e0f0;
+    --input: #e0e0f0;
+    --ring: #6e56cf;
+    --radius: 0.5rem;
+
+    --chart-1: #6e56cf;
+    --chart-2: #9e8cfc;
+    --chart-3: #5d5fef;
+    --chart-4: #7c75fa;
+    --chart-5: #4740b3;
+
+    /* 随行挂件常驻色彩系统（不受白天黑夜模式破坏） */
+    --purple-glow: #c084fc;
+    --purple-accent: #a855f7;
+    --purple-deep: #7e22ce;
+    --fuchsia-bright: #e879f9;
+    --fuchsia-neon: #f43f5e;
+
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Hiragino Sans GB", "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .dark {
+    /* ================= Tweakcn Cosmic Night (黑夜模式 / Dark) ================= */
+    --background: #0f0f1a;
+    --foreground: #e2e2f5;
+    --card: #1a1a2e;
+    --card-foreground: #e2e2f5;
+    --popover: #1a1a2e;
+    --popover-foreground: #e2e2f5;
+    --primary: #a48fff;
+    --primary-foreground: #0f0f1a;
+    --secondary: #2d2b55;
+    --secondary-foreground: #c4c2ff;
+    --muted: #222244;
+    --muted-foreground: #a0a0c0;
+    --accent: #303060;
+    --accent-foreground: #e2e2f5;
+    --destructive: #ff5470;
+    --destructive-foreground: #ffffff;
+    --border: #303052;
+    --input: #303052;
+    --ring: #a48fff;
+    --radius: 0.5rem;
+
+    --chart-1: #a48fff;
+    --chart-2: #7986cb;
+    --chart-3: #64b5f6;
+    --chart-4: #4db6ac;
+    --chart-5: #ff79c6;
+  }
+}
+
+/* 优雅细滚动条（自适应当前主题） */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+  overscroll-behavior-x: none !important;
+  overscroll-behavior-y: none !important;
+  background: transparent !important;
+  color: var(--foreground);
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -webkit-user-drag: none !important;
+  touch-action: none !important;
+}
+
+/* 1. 随行悬浮挂件专属外层（100% 物理贴合无边框，彻底杜绝任何网页滚动与弹跳） */
+body.is-widget-window {
+  background: transparent !important;
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+  touch-action: none !important;
+}
+
+body.is-widget-window #root {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+  background: transparent !important;
+}
+
+/* 2. 主控制看板专属外层（视口透明，四个圆角由内层卡片圆角纯粹剪裁，不留黑底） */
+body.is-dashboard-window {
+  background: transparent !important;
+}
+
+body.is-dashboard-window #root {
+  width: 100vw;
+  height: 100vh;
+  display: block;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  background: transparent !important;
+}
+
+/* 核心悬浮卡片容器（丝滑深紫罗兰极光渐变，常驻免打扰） */
+.bits-widget-card {
+  --wails-draggable: drag;
+  cursor: grab;
+  width: 100%;
+  height: 100%;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  padding: 8px 14px 10px !important;
+  border-radius: 18px !important;
+  
+  /* 梦幻紫色流光渐变背景，柔和过渡 */
+  background: 
+    radial-gradient(circle at 85% 15%, rgba(192, 132, 252, 0.22) 0%, transparent 60%),
+    radial-gradient(circle at 15% 85%, rgba(232, 121, 249, 0.16) 0%, transparent 60%),
+    linear-gradient(135deg, rgba(34, 15, 62, 0.96) 0%, rgba(20, 9, 40, 0.98) 50%, rgba(46, 14, 78, 0.94) 100%) !important;
+  
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  
+  /* 精细单层深紫微光边框 */
+  border: 1px solid rgba(192, 132, 252, 0.28) !important;
+  box-shadow: 0 14px 32px rgba(10, 3, 22, 0.55), 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+  
+  /* 开启 GPU 硬件加速与亚像素抗锯齿平滑渲染 */
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  outline: 1px solid transparent;
+  
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.bits-widget-card:active {
+  cursor: grabbing;
+}
+
+/* 提醒到达呼吸发光（玫紫流光） */
+.bits-widget-card.is-alerting {
+  border-color: rgba(255, 84, 112, 0.75) !important;
+  box-shadow: 0 0 32px rgba(255, 84, 112, 0.5) !important;
+  animation: pulse-purple-ring 2s infinite ease-in-out;
+}
+
+@keyframes pulse-purple-ring {
+  0%, 100% { box-shadow: 0 0 16px rgba(232, 121, 249, 0.3); }
+  50% { box-shadow: 0 0 34px rgba(255, 84, 112, 0.6); }
+}
+
+/* 顶部状态与工具条 */
+.widget-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 18px;
+}
+
+.widget-status-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.live-dot {
+  width: 6.5px;
+  height: 6.5px;
+  border-radius: 50%;
+  background: var(--purple-glow);
+  box-shadow: 0 0 8px var(--purple-glow);
+}
+
+.live-dot.alert {
+  background: var(--fuchsia-neon);
+  box-shadow: 0 0 10px var(--fuchsia-neon);
+  animation: blink 0.8s infinite alternate;
+}
+
+.live-dot.paused {
+  background: #fbbf24;
+  box-shadow: 0 0 7px #fbbf24;
+}
+
+.live-dot.away {
+  background: #38bdf8;
+  box-shadow: 0 0 8px #38bdf8;
+  animation: blink 1.4s infinite alternate;
+}
+
+@keyframes blink {
+  from { opacity: 0.25; }
+  to { opacity: 1; }
+}
+
+/* 顶部中间拖拽把手指示条 */
+.widget-drag-indicator {
+  width: 32px;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(232, 121, 249, 0.28);
+  pointer-events: none;
+}
+
+/* 顶部操作图标 */
+.widget-top-actions {
+  --wails-draggable: no-drag;
+  display: flex;
+  gap: 4px;
+}
+
+.mini-icon-btn {
+  --wails-draggable: no-drag;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: #d8b4fe;
+  font-size: 10px;
+  transition: all 0.15s ease;
+}
+
+.mini-icon-btn:hover {
+  background: rgba(192, 132, 252, 0.25);
+  color: #fff;
+}
+
+.mini-icon-btn.hide:hover {
+  background: rgba(192, 132, 252, 0.35);
+  color: #fff;
+  transform: scale(1.05);
+}
+
+/* 视图容器 */
+.view-viewport {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+/* ================= 1. 主视图：聚焦时间 ================= */
+.main-time-view {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.pet-emoji {
+  font-size: 30px;
+  line-height: 1;
+  animation: float-pet 3s ease-in-out infinite;
+}
+
+.pet-emoji.alert {
+  animation: bounce-alert 0.5s infinite alternate ease-in-out;
+}
+
+.pet-emoji.away {
+  filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.5));
+}
+
+@keyframes float-pet {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+@keyframes bounce-alert {
+  0% { transform: translateY(0) scale(1); }
+  100% { transform: translateY(-4px) scale(1.15); }
+}
+
+/* 中央时间显示区（集成 React Bits Counter） */
+.time-focus-center {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+}
+
+.timer-interactive-row {
+  --wails-draggable: no-drag;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+/* Counter 机械翻转时钟容器 */
+.counter-clock-wrap {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  letter-spacing: -0.03em;
+  text-shadow: 0 0 16px rgba(192, 132, 252, 0.4);
+}
+
+.counter-colon {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--purple-glow);
+  margin: 0 1px;
+  line-height: 1;
+  animation: colon-pulse 1s infinite alternate ease-in-out;
+}
+
+@keyframes colon-pulse {
+  from { opacity: 0.5; }
+  to { opacity: 1; }
+}
+
+.timer-view-tag {
+  font-size: 9.5px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(232, 121, 249, 0.12);
+  border: 1px solid rgba(232, 121, 249, 0.2);
+  color: #d8b4fe;
+}
+
+.timer-view-tag.away {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: rgba(56, 189, 248, 0.3);
+  color: #7dd3fc;
+}
+
+/* 紫色流光微型进度条 */
+.micro-progress-track {
+  width: 100%;
+  max-width: 160px;
+  height: 3.5px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.micro-progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #c084fc 0%, #a855f7 50%, #e879f9 100%);
+  box-shadow: 0 0 6px rgba(192, 132, 252, 0.5);
+  transition: width 0.3s ease;
+}
+
+.micro-progress-fill.alert {
+  background: linear-gradient(90deg, #f59e0b 0%, #f43f5e 100%);
+  box-shadow: 0 0 8px rgba(244, 63, 94, 0.6);
+}
+
+.micro-progress-fill.away {
+  background: linear-gradient(90deg, #38bdf8 0%, #818cf8 100%);
+  box-shadow: 0 0 6px rgba(56, 189, 248, 0.5);
+}
+
+/* 紧凑操作按钮区 */
+.compact-actions-group {
+  --wails-draggable: no-drag;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.action-circle-btn {
+  --wails-draggable: no-drag;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  border: 1px solid rgba(216, 180, 254, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fdf4ff;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.action-circle-btn:hover {
+  background: rgba(192, 132, 252, 0.2);
+  border-color: rgba(216, 180, 254, 0.35);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.action-circle-btn.pause {
+  color: #fbbf24;
+}
+
+.action-circle-btn.settings {
+  color: var(--purple-glow);
+}
+
+/* 提醒中专属操作区 */
+.alert-actions-group {
+  --wails-draggable: no-drag;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.snooze-outline-btn {
+  --wails-draggable: no-drag;
+  cursor: pointer;
+  height: 40px;
+  padding: 0 10px;
+  border: 1px solid rgba(216, 180, 254, 0.22);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fdf4ff;
+  font-size: 11px;
+  transition: background 0.15s ease;
+}
+
+.snooze-outline-btn:hover {
+  background: rgba(192, 132, 252, 0.25);
+}
+
+/* ================= 2. 二级菜单：设置视图（支持选择即返回） ================= */
+.settings-sub-view {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  animation: slideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 1px 0;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.settings-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.settings-done-pill {
+  --wails-draggable: no-drag;
+  cursor: pointer;
+  border: 1px solid rgba(192, 132, 252, 0.3);
+  border-radius: 6px;
+  background: rgba(168, 85, 247, 0.18);
+  color: var(--purple-glow);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  transition: all 0.15s ease;
+}
+
+.settings-done-pill:hover {
+  background: rgba(168, 85, 247, 0.35);
+  color: #fff;
+}
+
+.settings-title {
+  font-size: 10.5px;
+  color: #d8b4fe;
+}
+
+/* 设置行标签与药丸容器 */
+.settings-line-block {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.settings-label-text {
+  font-size: 10px;
+  color: #d8b4fe;
+  white-space: nowrap;
+}
+
+.settings-pills-row {
+  --wails-draggable: no-drag;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.settings-pill {
+  --wails-draggable: no-drag;
+  cursor: pointer;
+  height: 22px;
+  padding: 0 6px;
+  border: 1px solid rgba(216, 180, 254, 0.15);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #d8b4fe;
+  font-size: 10px;
+  font-weight: 500;
+  transition: all 0.15s ease;
+}
+
+.settings-pill:hover {
+  background: rgba(192, 132, 252, 0.2);
+  color: #fff;
+}
+
+.settings-pill.active {
+  background: linear-gradient(135deg, #a855f7 0%, #c084fc 100%);
+  color: #ffffff;
+  border-color: var(--purple-glow);
+  font-weight: 700;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.4);
+}
+
+/* 自定义输入行 */
+.custom-input-row {
+  --wails-draggable: no-drag;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.custom-input-field {
+  width: 52px;
+  height: 22px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(216, 180, 254, 0.25);
+  border-radius: 5px;
+  color: #fff;
+  font-size: 10px;
+  padding: 0 4px;
+  text-align: center;
+  outline: none;
+}
+
+.custom-input-field:focus {
+  border-color: var(--purple-glow);
+}
+
+.custom-submit-btn {
+  --wails-draggable: no-drag;
+  cursor: pointer;
+  height: 22px;
+  padding: 0 6px;
+  border: none;
+  border-radius: 5px;
+  background: linear-gradient(135deg, #a855f7 0%, #c084fc 100%);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 600;
+  transition: filter 0.15s ease;
+}
+
+.custom-submit-btn:hover {
+  filter: brightness(1.1);
+}
+
+/* ================= 随行桌面消息通知弹窗动效体系 ================= */
+.toast-widget-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent !important;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.toast-widget-card {
+  --wails-draggable: drag;
+  cursor: grab;
+  position: relative;
+  width: 360px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  border-radius: 20px;
+  
+  /* 现代玻璃拟态背景，融合 Cosmic Night 调色（白天浅色高对比度） */
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(28px) saturate(190%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  border: 1px solid rgba(110, 86, 207, 0.25);
+  box-shadow: 0 12px 32px rgba(42, 42, 74, 0.16), 0 2px 8px rgba(0, 0, 0, 0.06);
+  
+  /* 苹果风格弹性物理阻尼曲线 */
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.32s ease,
+              filter 0.32s ease,
+              background-color 0.25s ease,
+              border-color 0.25s ease,
+              box-shadow 0.25s ease;
+  transform: translateZ(0);
+}
+
+/* 黑夜模式深度融合 Cosmic Night 调色 */
+.dark .toast-widget-card {
+  background: rgba(22, 18, 38, 0.90);
+  border: 1px solid rgba(164, 143, 255, 0.3);
+  box-shadow: 0 14px 38px rgba(8, 4, 18, 0.65), 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.toast-widget-card:active {
+  cursor: grabbing;
+}
+
+/* 进场前 / 刚挂载状态（向上偏移 + 透明 + 微模糊） */
+.toast-widget-card.state-entering {
+  opacity: 0;
+  transform: translateY(-20px) scale(0.95);
+  filter: blur(4px);
+}
+
+/* 活跃展示态（分毫不差归位 + 100% 锐利清晰） */
+.toast-widget-card.state-active {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  filter: blur(0);
+}
+
+/* 优雅淡出退场态（向上平滑滑走 + 渐隐渐消） */
+.toast-widget-card.state-exiting {
+  opacity: 0;
+  transform: translateY(-16px) scale(0.95);
+  filter: blur(4px);
+  pointer-events: none;
+}
+
+/* 休息提醒警示态（微光律动流光） */
+.toast-widget-card.is-alerting {
+  border-color: rgba(255, 84, 112, 0.65) !important;
+  box-shadow: 0 0 28px rgba(255, 84, 112, 0.4), 0 12px 32px rgba(8, 4, 18, 0.6) !important;
+  animation: toast-pulse-ring 2.2s infinite ease-in-out;
+}
+
+@keyframes toast-pulse-ring {
+  0%, 100% { box-shadow: 0 0 16px rgba(255, 84, 112, 0.3), 0 12px 32px rgba(8, 4, 18, 0.6); }
+  50% { box-shadow: 0 0 32px rgba(255, 84, 112, 0.6), 0 12px 32px rgba(8, 4, 18, 0.6); }
+}
