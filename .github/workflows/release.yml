@@ -43,7 +43,7 @@ jobs:
         env:
           GOFLAGS: "-ldflags=-X=workpet/pkg/version.Version=${{ github.ref_type == 'tag' && github.ref_name || 'v0.1.0' }}"
         run: |
-          wails3 package -tags "production,private_mac_apis"
+          wails3 package
 
       - name: Create macOS Release Archive
         run: |
