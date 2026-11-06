@@ -12,7 +12,21 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
 )
+
+// GetWorkPetDir 获取统一的 WorkPet 应用数据根目录 (~/.workpet)
+func GetWorkPetDir() string {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		homeDir = "."
+	}
+	dir := filepath.Join(homeDir, ".workpet")
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		log.Printf("[Config] 确保数据根目录失败: %v", err)
+	}
+	return dir
+}
 
 // AppConfig 保存用户的偏好设置、窗口坐标与工具箱配置
 type AppConfig struct {
@@ -28,23 +42,18 @@ type AppConfig struct {
 	DashboardWidgets []string `json:"dashboardWidgets"`
 }
 
-// ConfigManager 负责配置的读取与安全写入
+// ConfigManager 负责配置的读取与安全写入（支持高频位置写入防抖）
 type ConfigManager struct {
-	mu       sync.Mutex
-	filePath string
-	config   AppConfig
+	mu         sync.Mutex
+	filePath   string
+	config     AppConfig
+	posTimer   *time.Timer
+	pendingPos bool
 }
 
 // NewConfigManager 初始化配置管理器并加载历史配置
 func NewConfigManager() *ConfigManager {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		homeDir = "."
-	}
-	configDir := filepath.Join(homeDir, ".workpet")
-	if err := os.MkdirAll(configDir, 0755); err != nil {
-		log.Printf("创建配置目录失败: %v", err)
-	}
+	configDir := GetWorkPetDir()
 	configFile := filepath.Join(configDir, "config.json")
 
 	cm := &ConfigManager{
@@ -55,8 +64,8 @@ func NewConfigManager() *ConfigManager {
 			IdleThreshold:    3,
 			OffDutyThreshold: 30, // 默认 30 分钟连续离座判定为午休或下班
 			Autostart:        false,
-			AutoHideWidget: true,
-			EnabledTools:   []string{"activity", "datetime"},
+			AutoHideWidget:   true,
+			EnabledTools:     []string{"activity", "datetime"},
 			DashboardWidgets: []string{
 				"activity-focus-today",
 				"activity-rest-today",
@@ -125,7 +134,7 @@ func (cm *ConfigManager) GetConfig() AppConfig {
 	return cm.config
 }
 
-// SavePosition 保存窗口位置坐标
+// SavePosition 保存窗口位置坐标（带 600ms 定时器防抖，避免拖动窗口产生高频磁盘 IO）
 func (cm *ConfigManager) SavePosition(x, y int) {
 	cm.mu.Lock()
 	defer cm.mu.Unlock()
@@ -133,7 +142,34 @@ func (cm *ConfigManager) SavePosition(x, y int) {
 	cm.config.WindowX = x
 	cm.config.WindowY = y
 	cm.config.HasSavedPos = true
-	cm.saveLocked()
+	cm.pendingPos = true
+
+	if cm.posTimer != nil {
+		cm.posTimer.Stop()
+	}
+
+	cm.posTimer = time.AfterFunc(600*time.Millisecond, func() {
+		cm.mu.Lock()
+		defer cm.mu.Unlock()
+		if cm.pendingPos {
+			cm.saveLocked()
+			cm.pendingPos = false
+		}
+	})
+}
+
+// Flush 立即将未完成的内存改动同步刷写到磁盘
+func (cm *ConfigManager) Flush() {
+	cm.mu.Lock()
+	defer cm.mu.Unlock()
+
+	if cm.posTimer != nil {
+		cm.posTimer.Stop()
+	}
+	if cm.pendingPos {
+		cm.saveLocked()
+		cm.pendingPos = false
+	}
 }
 
 // SaveInterval 保存专注时长设置

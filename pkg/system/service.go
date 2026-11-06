@@ -112,11 +112,20 @@ func (s *Service) SetAutoHideWidget(enabled bool) {
 	s.configMgr.SetAutoHideWidget(enabled)
 }
 
+// ToolChangeNotification 工具启闭变动事件统一载荷
+type ToolChangeNotification struct {
+	ToolID  string `json:"toolId"`
+	Enabled bool   `json:"enabled"`
+}
+
 // SetToolEnabled 启用或禁用某个工具
 func (s *Service) SetToolEnabled(toolID string, enabled bool) {
 	s.configMgr.SetToolEnabled(toolID, enabled)
 	if s.app != nil {
-		s.app.Event.Emit("settings:tools-changed", toolID, enabled)
+		s.app.Event.Emit("settings:tools-changed", ToolChangeNotification{
+			ToolID:  toolID,
+			Enabled: enabled,
+		})
 	}
 }
 

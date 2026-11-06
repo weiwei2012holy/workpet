@@ -124,6 +124,7 @@ func main() {
 	})
 
 	floatWindow.RegisterHook(events.Common.WindowClosing, func(e *application.WindowEvent) {
+		configMgr.Flush()
 		floatWindow.Hide()
 		e.Cancel()
 	})
@@ -212,6 +213,7 @@ func main() {
 	})
 	trayMenu.AddSeparator()
 	trayMenu.Add("退出 WorkPet (Quit)").SetAccelerator("CmdOrCtrl+Q").OnClick(func(ctx *application.Context) {
+		configMgr.Flush()
 		activityService.Quit()
 	})
 	tray.SetMenu(trayMenu)

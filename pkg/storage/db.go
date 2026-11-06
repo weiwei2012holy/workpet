@@ -11,9 +11,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"os"
 	"path/filepath"
 	"sync"
+
+	"workpet/pkg/config"
 
 	_ "modernc.org/sqlite"
 )
@@ -36,15 +37,7 @@ type DB struct {
 
 // InitDB 初始化本地 SQLite 数据库，并自动执行 Schema 迁移
 func InitDB() (*DB, error) {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		homeDir = "."
-	}
-	dbDir := filepath.Join(homeDir, ".workpet")
-	if err := os.MkdirAll(dbDir, 0755); err != nil {
-		return nil, fmt.Errorf("创建数据库目录失败: %w", err)
-	}
-
+	dbDir := config.GetWorkPetDir()
 	dbPath := filepath.Join(dbDir, "workpet.db")
 	dsn := fmt.Sprintf("%s?_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)&_pragma=synchronous(NORMAL)", dbPath)
 

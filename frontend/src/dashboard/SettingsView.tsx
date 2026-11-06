@@ -9,13 +9,13 @@ import { Sliders, Power, Keyboard, Sparkles, CheckCircle2, Sun, Moon, Laptop, Pa
 import * as SystemService from "@/../bindings/workpet/pkg/system/service";
 import * as UpdateService from "@/../bindings/workpet/pkg/updater/service";
 import { UpdateInfo } from "@/../bindings/workpet/pkg/updater/models";
-import { Events } from "@wailsio/runtime";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ThemeMode, getStoredThemeMode, setThemeMode, initThemeListener } from "@/lib/theme";
 import { UpdateModal } from "./UpdateModal";
+import { APP_EVENTS, subscribeEvent } from "@/types/events";
 
 interface SettingsViewProps {
   settings: {
@@ -54,14 +54,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       })
       .catch(console.error);
 
-    // 监听全局更新生命周期事件
-    const unUpdater = Events.On("workpet:updater:status", (evt: any) => {
-      const payload: UpdateInfo = evt.data || evt;
-      if (payload) {
-        setUpdateInfo(payload);
-        if (payload.hasUpdate && payload.state === "available") {
-          setIsUpdateModalOpen(true);
-        }
+    // 监听全局更新生命周期事件（强类型安全订阅）
+    const unUpdater = subscribeEvent<UpdateInfo>(APP_EVENTS.UPDATER_STATUS, (payload) => {
+      setUpdateInfo(payload);
+      if (payload.hasUpdate && payload.state === "available") {
+        setIsUpdateModalOpen(true);
       }
     });
 

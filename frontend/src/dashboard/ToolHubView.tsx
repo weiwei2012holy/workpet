@@ -50,13 +50,16 @@ export const ToolHubView: React.FC<ToolHubViewProps> = ({
       {/* 工具列表卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {REGISTERED_TOOLS.map((tool) => {
-          const isEnabled = enabledTools.includes(tool.id);
+          const isComingSoon = tool.status === "coming_soon";
+          const isEnabled = !isComingSoon && enabledTools.includes(tool.id);
 
           return (
             <Card
               key={tool.id}
               className={`p-5 flex flex-col justify-between transition-all ${
-                isEnabled
+                isComingSoon
+                  ? "bg-muted/20 border-border/40 opacity-70"
+                  : isEnabled
                   ? "bg-card border-border shadow-sm hover:border-primary/50"
                   : "bg-muted/40 border-border/50 opacity-60"
               }`}
@@ -65,15 +68,20 @@ export const ToolHubView: React.FC<ToolHubViewProps> = ({
                 {/* 头部图标与启闭开关 */}
                 <div className="flex items-center justify-between mb-3.5">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-primary/15 border border-primary/25 flex items-center justify-center text-xl shadow-inner">
+                    <div className="size-10 rounded-xl bg-primary/15 border border-primary/25 flex items-center justify-center text-xl shadow-inner">
                       {tool.icon}
                     </div>
                     <div>
                       <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                         {tool.name}
                         {isEnabled && (
-                          <Badge variant="success" className="text-xs px-2 py-0.2">
+                          <Badge variant="default" className="text-xs px-2 py-0 bg-primary/20 text-primary border border-primary/30">
                             运行中
+                          </Badge>
+                        )}
+                        {isComingSoon && (
+                          <Badge variant="outline" className="text-[11px] px-1.5 py-0 text-muted-foreground border-border/80 border-dashed">
+                            规划中
                           </Badge>
                         )}
                       </h3>
@@ -83,11 +91,17 @@ export const ToolHubView: React.FC<ToolHubViewProps> = ({
                     </div>
                   </div>
 
-                  {/* 启闭 Switch */}
-                  <Switch
-                    checked={isEnabled}
-                    onCheckedChange={(checked) => onToggleTool(tool.id, checked)}
-                  />
+                  {/* 启闭 Switch / 占位提示 */}
+                  {isComingSoon ? (
+                    <Badge variant="secondary" className="text-[11px] font-normal text-muted-foreground">
+                      即将推出
+                    </Badge>
+                  ) : (
+                    <Switch
+                      checked={isEnabled}
+                      onCheckedChange={(checked) => onToggleTool(tool.id, checked)}
+                    />
+                  )}
                 </div>
 
                 {/* 描述信息 */}
@@ -99,7 +113,7 @@ export const ToolHubView: React.FC<ToolHubViewProps> = ({
               {/* 底部操作与配置 */}
               <div className="flex items-center justify-between pt-3.5 border-t border-border">
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <ShieldCheck size={14} className="text-primary" />
+                  <ShieldCheck size={14} className={isComingSoon ? "text-muted-foreground" : "text-primary"} />
                   <span>内置官方插件</span>
                 </div>
 
@@ -124,7 +138,7 @@ export const ToolHubView: React.FC<ToolHubViewProps> = ({
                   </Button>
                 ) : (
                   <span className="text-xs text-muted-foreground font-mono">
-                    更多设置开发中
+                    待后续版本接入
                   </span>
                 )}
               </div>

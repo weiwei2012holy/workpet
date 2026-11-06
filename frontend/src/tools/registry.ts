@@ -19,6 +19,7 @@ export interface ToolDefinition {
   description: string;     // 简短功能描述
   defaultEnabled: boolean; // 默认是否开启
   category: "efficiency" | "health" | "utility"; // 分类
+  status: "active" | "coming_soon"; // 工具实装状态：active=已实装支持，coming_soon=规划中
 }
 
 // 指标小组件定义（手机桌面卡片式组件）
@@ -41,6 +42,7 @@ export const REGISTERED_TOOLS: ToolDefinition[] = [
     description: "硬件级键鼠物理感知、科学作息提醒与全天专注走势追踪",
     defaultEnabled: true,
     category: "health",
+    status: "active",
   },
   {
     id: "datetime",
@@ -49,6 +51,7 @@ export const REGISTERED_TOOLS: ToolDefinition[] = [
     description: "开发调试必备的时间戳与多格式日期双向实时互转工具，支持秒/毫秒及常用SQL时间生成",
     defaultEnabled: true,
     category: "utility",
+    status: "active",
   },
   {
     id: "clipboard",
@@ -57,6 +60,7 @@ export const REGISTERED_TOOLS: ToolDefinition[] = [
     description: "历史剪贴板自动快照、格式清理与常用模版片段库",
     defaultEnabled: false,
     category: "efficiency",
+    status: "coming_soon",
   },
   {
     id: "pomodoro",
@@ -65,6 +69,7 @@ export const REGISTERED_TOOLS: ToolDefinition[] = [
     description: "标准番茄工作法管理、白噪音与专注阶段效率报告",
     defaultEnabled: false,
     category: "efficiency",
+    status: "coming_soon",
   },
   {
     id: "quicknote",
@@ -73,6 +78,7 @@ export const REGISTERED_TOOLS: ToolDefinition[] = [
     description: "桌面轻便备忘录、Markdown 支持与待办轻打卡",
     defaultEnabled: false,
     category: "utility",
+    status: "coming_soon",
   },
 ];
 

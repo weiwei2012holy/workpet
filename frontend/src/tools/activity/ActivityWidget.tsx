@@ -5,11 +5,11 @@
  **/
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Events } from "@wailsio/runtime";
 import { Play, Pause, RotateCcw, Check, Sparkles } from "lucide-react";
 import SwipeToast, { SwipeToastCloseReason } from "@/components/SwipeToast";
 import { Service as ActivityService } from "../../../bindings/workpet/pkg/tools/activity";
 import { ReminderState } from "../../../bindings/workpet/pkg/tools/activity/models";
+import { APP_EVENTS, subscribeEvent } from "@/types/events";
 
 // 提示音效
 const playAlertSound = () => {
@@ -125,7 +125,7 @@ export default function ActivityWidget() {
     handleWakeup();
 
     // 核心生命周期：后端通知窗口被 Show
-    const unShown = Events.On("reminder:window-shown", () => {
+    const unShown = subscribeEvent(APP_EVENTS.WINDOW_SHOWN, () => {
       handleWakeup();
     });
 
@@ -144,9 +144,7 @@ export default function ActivityWidget() {
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     // 监听时钟跳动事件
-    const unTick = Events.On("reminder:tick", (evt: any) => {
-      const payload: ReminderState = evt.data || evt;
-      if (!payload) return;
+    const unTick = subscribeEvent<ReminderState>(APP_EVENTS.REMINDER_TICK, (payload) => {
       setState(payload);
 
       if (payload.isReminding && !hasAlertedRef.current) {
@@ -159,17 +157,14 @@ export default function ActivityWidget() {
     });
 
     // 监听离座归位欢迎事件
-    const unReturned = Events.On("reminder:returned", (evt: any) => {
-      const payload: ReminderState = evt.data || evt;
-      if (payload) {
-        setState(payload);
-        setOpen(true);
-        playWelcomeBackSound();
-      }
+    const unReturned = subscribeEvent<ReminderState>(APP_EVENTS.REMINDER_RETURNED, (payload) => {
+      setState(payload);
+      setOpen(true);
+      playWelcomeBackSound();
     });
 
     // 监听后端发起的自动淡出请求
-    const unFadeOut = Events.On("reminder:request-fade-out", () => {
+    const unFadeOut = subscribeEvent(APP_EVENTS.REQUEST_FADE_OUT, () => {
       setOpen(false);
     });
 

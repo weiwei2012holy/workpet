@@ -19,8 +19,15 @@ import { WidgetGalleryModal } from "./WidgetGalleryModal";
 
 import * as SystemService from "@/../bindings/workpet/pkg/system/service";
 import * as ActivityService from "@/../bindings/workpet/pkg/tools/activity/service";
-import { Events } from "@wailsio/runtime";
 import { initThemeListener } from "@/lib/theme";
+import {
+  APP_EVENTS,
+  subscribeEvent,
+  ToolChangedPayload,
+  DashboardWidgetsPayload,
+  ActivityStatsPayload,
+  ReminderTickPayload,
+} from "@/types/events";
 
 export const MainDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("dashboard");
@@ -109,28 +116,43 @@ export const MainDashboard: React.FC = () => {
 
     initData();
 
-    // 2. 监听事件实时更新
-    const unbindStats = Events.On("activity:stats-update", (evt: any) => {
-      const data = evt?.data || evt;
-      if (data) setStats(data);
-    });
+    // 2. 监听事件实时更新（强类型订阅契约）
+    const unbindStats = subscribeEvent<ActivityStatsPayload>(
+      APP_EVENTS.ACTIVITY_STATS_UPDATE,
+      (data) => setStats(data)
+    );
 
-    const unbindTick = Events.On("reminder:tick", (evt: any) => {
-      const data = evt?.data || evt;
-      if (data) setReminderState(data);
-    });
+    const unbindTick = subscribeEvent<ReminderTickPayload>(
+      APP_EVENTS.REMINDER_TICK,
+      (data) => setReminderState(data)
+    );
 
-    const unbindWidgets = Events.On("settings:dashboard-widgets-changed", (evt: any) => {
-      const widgets = evt?.data || evt;
-      if (Array.isArray(widgets)) {
-        setSettings((prev) => ({ ...prev, dashboardWidgets: widgets }));
+    const unbindWidgets = subscribeEvent<DashboardWidgetsPayload>(
+      APP_EVENTS.DASHBOARD_WIDGETS_CHANGED,
+      (widgets) => {
+        if (Array.isArray(widgets)) {
+          setSettings((prev) => ({ ...prev, dashboardWidgets: widgets }));
+        }
       }
-    });
+    );
+
+    // 补齐 tools-changed 事件监听，跨窗口实时同步工具启闭状态
+    const unbindTools = subscribeEvent<ToolChangedPayload>(
+      APP_EVENTS.TOOLS_CHANGED,
+      ({ toolId, enabled }) => {
+        setSettings((prev) => {
+          let updated = prev.enabledTools.filter((id) => id !== toolId);
+          if (enabled) updated.push(toolId);
+          return { ...prev, enabledTools: updated };
+        });
+      }
+    );
 
     return () => {
       if (unbindStats) unbindStats();
       if (unbindTick) unbindTick();
       if (unbindWidgets) unbindWidgets();
+      if (unbindTools) unbindTools();
     };
   }, []);
 
