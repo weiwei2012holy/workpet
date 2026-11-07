@@ -125,7 +125,7 @@ jobs:
     name: Create GitHub Release
     needs: [build-macos, build-windows]
     if: startsWith(github.ref, 'refs/tags/')
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -155,7 +155,11 @@ jobs:
       - name: Generate Checksums
         run: |
           cd ./release-assets
-          sha256sum * > SHA256SUMS
+          if command -v sha256sum >/dev/null 2>&1; then
+            sha256sum * > SHA256SUMS
+          else
+            shasum -a 256 * > SHA256SUMS
+          fi
           cat SHA256SUMS
           cd ..
 
