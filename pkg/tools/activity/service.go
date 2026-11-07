@@ -333,16 +333,22 @@ func (s *Service) SetOffDutyThreshold(minutes int) {
 // OnWindowLostFocus 当随行小组件失去焦点时调用
 func (s *Service) OnWindowLostFocus() {
 	s.mu.RLock()
-	autoHideEnabled := true
+	autoHideEnabled := false
 	if s.configMgr != nil {
 		autoHideEnabled = s.configMgr.GetConfig().AutoHideWidget
 	}
 	isReminding := s.stateMachine.isReminding
 	window := s.window
+	dash := s.dashboardWindow
 	s.mu.RUnlock()
 
-	// 提醒阶段不自动失焦收起
+	// 提醒阶段或未开启失焦隐藏时不收起
 	if isReminding || !autoHideEnabled {
+		return
+	}
+
+	// 若当前主控制看板处于可见状态（焦点转移到了看板），绝不误伤挂件
+	if dash != nil && dash.IsVisible() {
 		return
 	}
 

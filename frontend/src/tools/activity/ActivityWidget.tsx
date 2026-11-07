@@ -88,19 +88,14 @@ export default function ActivityWidget() {
   const hasAlertedRef = useRef<boolean>(false);
   const dragStartPos = useRef<{ x: number; y: number } | null>(null);
 
-  // 记录鼠标按下位置，区分原生拖拽与单击打开看板
+  // 记录鼠标按下位置，支持原生拖拽
   const handleTimeMouseDown = (e: React.MouseEvent) => {
     dragStartPos.current = { x: e.clientX, y: e.clientY };
   };
 
-  const handleTimeClick = (e: React.MouseEvent) => {
-    if (dragStartPos.current) {
-      const dx = Math.abs(e.clientX - dragStartPos.current.x);
-      const dy = Math.abs(e.clientY - dragStartPos.current.y);
-      if (dx > 5 || dy > 5) {
-        return; // 用户刚才是在拖动窗口位置，拦截单击误触
-      }
-    }
+  // 双击大字时间打开大控制看板，彻底避免单击或拖动时的误触
+  const handleTimeDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     SystemService.OpenDashboard();
   };
 
@@ -270,10 +265,15 @@ export default function ActivityWidget() {
           className="flex items-center justify-between w-full h-full gap-2.5 py-0.5 cursor-grab active:cursor-grabbing"
           title="按住任意区域拖动悬浮窗位置"
         >
-          {/* 1. 左侧状态微感知图标 */}
-          <div className="flex items-center pl-0.5">
+          {/* 1. 左侧状态微感知图标（可点击呼出控制中心） */}
+          <div
+            style={{ "--wails-draggable": "no-drag" } as React.CSSProperties}
+            onClick={() => SystemService.OpenDashboard()}
+            className="flex items-center pl-0.5 cursor-pointer"
+            title="点击打开指标看板与控制台"
+          >
             <div
-              className={`w-9 h-9 rounded-xl flex items-center justify-center text-base transition-all shadow-sm ${
+              className={`w-9 h-9 rounded-xl flex items-center justify-center text-base transition-all shadow-sm hover:scale-105 active:scale-95 ${
                 state.isReminding
                   ? "bg-rose-500/25 text-rose-400 border border-rose-500/50 animate-pulse"
                   : state.isOffDuty
@@ -297,12 +297,12 @@ export default function ActivityWidget() {
             </div>
           </div>
 
-          {/* 2. 核心大字时间与状态指示（轻点打开大控制看板，按住则原生拖拽窗口） */}
+          {/* 2. 核心大字时间与状态指示（按住拖拽窗口位置，双击打开指标看板） */}
           <div
             onMouseDown={handleTimeMouseDown}
-            onClick={handleTimeClick}
-            className="flex-1 flex flex-col justify-center px-2 group/timer"
-            title="点击打开指标看板与控制台（拖动可调整窗口位置）"
+            onDoubleClick={handleTimeDoubleClick}
+            className="flex-1 flex flex-col justify-center px-2 group/timer select-none"
+            title="按住拖拽挂件位置，双击打开指标看板"
           >
             <div className="flex items-baseline gap-2">
               <span

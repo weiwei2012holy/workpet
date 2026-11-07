@@ -64,7 +64,7 @@ func NewConfigManager() *ConfigManager {
 			IdleThreshold:    3,
 			OffDutyThreshold: 30, // 默认 30 分钟连续离座判定为午休或下班
 			Autostart:        false,
-			AutoHideWidget:   true,
+			AutoHideWidget:   false, // 默认桌面常驻，避免点击或失焦时意外消失
 			EnabledTools:     []string{"activity", "datetime"},
 			DashboardWidgets: []string{
 				"activity-focus-today",
