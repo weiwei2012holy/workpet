@@ -1,6 +1,6 @@
 /**
  * @Author wei
- * @Date 2026-11-05
+ * @Date 2026-11-07
  * @Description 仪表盘指标小组件：24小时专注走势图，使用 shadcn/ui 官方 Chart (Recharts AreaChart) 渐变平滑走势重构
  **/
 
@@ -29,7 +29,7 @@ interface HourlyTrendWidgetProps {
 const chartConfig = {
   minutes: {
     label: "专注",
-    color: "hsl(var(--primary))",
+    color: "rgb(var(--primary))",
   },
 } satisfies ChartConfig;
 
@@ -90,12 +90,12 @@ export const HourlyTrendWidget: React.FC<HourlyTrendWidgetProps> = ({
               <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
                 <stop
                   offset="5%"
-                  stopColor="hsl(var(--primary))"
+                  stopColor="rgb(var(--primary))"
                   stopOpacity={0.55}
                 />
                 <stop
                   offset="95%"
-                  stopColor="hsl(var(--primary))"
+                  stopColor="rgb(var(--primary))"
                   stopOpacity={0.02}
                 />
               </linearGradient>
@@ -127,7 +127,7 @@ export const HourlyTrendWidget: React.FC<HourlyTrendWidgetProps> = ({
             {/* shadcn 官方 ChartTooltip 悬停反馈 */}
             <ChartTooltip
               cursor={{
-                stroke: "hsl(var(--primary) / 0.4)",
+                stroke: "rgb(var(--primary) / 0.4)",
                 strokeWidth: 1,
                 strokeDasharray: "3 3",
               }}
@@ -149,13 +149,13 @@ export const HourlyTrendWidget: React.FC<HourlyTrendWidgetProps> = ({
               dataKey="minutes"
               type="monotone"
               fill="url(#trendGradient)"
-              stroke="hsl(var(--primary))"
+              stroke="rgb(var(--primary))"
               strokeWidth={2}
               dot={false}
               activeDot={{
                 r: 4,
-                fill: "hsl(var(--primary))",
-                stroke: "hsl(var(--card))",
+                fill: "rgb(var(--primary))",
+                stroke: "rgb(var(--card))",
                 strokeWidth: 2,
               }}
             />

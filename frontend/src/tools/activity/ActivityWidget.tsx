@@ -234,13 +234,15 @@ export default function ActivityWidget() {
   const progressPercent = Math.min(100, Math.max(0, (state.elapsedSeconds / totalTargetSecs) * 100));
 
   // 业务状态色彩 Tokens
+  // 【格式规范】index.css 中的 Token 已统一为「空格分隔的 RGB 通道三元组」（如 `192 132 252`），
+  // 因此作为完整颜色值使用时必须用 rgb() 包裹，否则会得到 `192 132 252` 这样不合法的颜色值。
   const fuseColor = state.isReminding
-    ? "var(--state-alerting)"
+    ? "rgb(var(--state-alerting))"
     : state.isAway
-    ? "var(--state-away)"
+    ? "rgb(var(--state-away))"
     : state.isPaused
-    ? "var(--state-paused)"
-    : "var(--state-working)";
+    ? "rgb(var(--state-paused))"
+    : "rgb(var(--state-working))";
 
   return (
     <div className="w-full h-full flex items-center justify-center p-0 m-0 select-none bg-transparent overflow-hidden">

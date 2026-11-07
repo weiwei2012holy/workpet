@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { resolveCssColor } from "@/lib/color";
 import { DashboardView } from "./DashboardView";
 import { ToolHubView } from "./ToolHubView";
 import { SettingsView } from "./SettingsView";
@@ -31,6 +32,13 @@ import {
 export const MainDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("dashboard");
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+
+  // ClickSpark 使用 Canvas 2D 绘制粒子，其 fillStyle 无法解析 CSS 变量，
+  // 故挂载后从计算样式中取出 --primary 的实际颜色值再传入。
+  const [sparkColor, setSparkColor] = useState<string>("#6e56cf");
+  useEffect(() => {
+    setSparkColor(resolveCssColor("--primary", "#6e56cf"));
+  }, []);
 
   // 系统配置状态
   const [settings, setSettings] = useState({
@@ -194,7 +202,7 @@ export const MainDashboard: React.FC = () => {
   };
 
   return (
-    <ClickSpark sparkColor="var(--primary)" sparkSize={7} sparkRadius={18} sparkCount={6}>
+    <ClickSpark sparkColor={sparkColor} sparkSize={7} sparkRadius={18} sparkCount={6}>
       <div className="w-screen h-screen flex flex-col bg-background text-foreground select-none overflow-hidden font-sans border border-border rounded-2xl shadow-2xl">
         {/* 无边框原生极光标题控制栏（集成拖拽区与窗口控制） */}
         <header
@@ -239,8 +247,8 @@ export const MainDashboard: React.FC = () => {
               <div className="flex items-center gap-2">
                 <ShinyText
                   text="WorkPet"
-                  color="var(--foreground)"
-                  shineColor="var(--primary)"
+                  color="rgb(var(--foreground))"
+                  shineColor="rgb(var(--primary))"
                   speed={3}
                   className="text-base font-bold tracking-wider"
                 />

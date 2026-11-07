@@ -1,6 +1,6 @@
 /**
  * @Author wei
- * @Date 2026-11-04
+ * @Date 2026-11-07
  * @Description 全局样式表，深度实现 Tweakcn Cosmic Night 官方白天 (Light) 与黑夜 (Dark) 双模配色，并支持多主题插槽
  **/
 
@@ -10,44 +10,48 @@
 
 @layer base {
   :root {
-    /* ================= Tweakcn Cosmic Night (白天模式 / Light) ================= */
-    --background: #f5f5ff;
-    --foreground: #2a2a4a;
-    --card: #ffffff;
-    --card-foreground: #2a2a4a;
-    --popover: #ffffff;
-    --popover-foreground: #2a2a4a;
-    --primary: #6e56cf;
-    --primary-foreground: #ffffff;
-    --secondary: #e4dfff;
-    --secondary-foreground: #4a4080;
-    --muted: #f0f0fa;
-    --muted-foreground: #6c6c8a;
-    --accent: #d8e6ff;
-    --accent-foreground: #2a2a4a;
-    --destructive: #ff5470;
-    --destructive-foreground: #ffffff;
-    --border: #e0e0f0;
-    --input: #e0e0f0;
-    --ring: #6e56cf;
+    /* ================= Tweakcn Cosmic Night (白天模式 / Light) =================
+     * 【格式规范】所有颜色 Token 一律书写为「空格分隔的 RGB 通道三元组」（如 `110 86 207`），
+     * 与 tailwind.config.js 中的 `rgb(var(--x) / <alpha-value>)` 严格配套。
+     * 切勿改回 hex（`#6e56cf`），否则 Tailwind 将无法生成 `bg-primary/20`
+     * 这类带透明度修饰符的工具类（会被静默丢弃）。 */
+    --background: 245 245 255;          /* #f5f5ff */
+    --foreground: 42 42 74;             /* #2a2a4a */
+    --card: 255 255 255;                /* #ffffff */
+    --card-foreground: 42 42 74;        /* #2a2a4a */
+    --popover: 255 255 255;             /* #ffffff */
+    --popover-foreground: 42 42 74;     /* #2a2a4a */
+    --primary: 110 86 207;              /* #6e56cf */
+    --primary-foreground: 255 255 255;  /* #ffffff */
+    --secondary: 228 223 255;           /* #e4dfff */
+    --secondary-foreground: 74 64 128;  /* #4a4080 */
+    --muted: 240 240 250;               /* #f0f0fa */
+    --muted-foreground: 108 108 138;    /* #6c6c8a */
+    --accent: 216 230 255;              /* #d8e6ff */
+    --accent-foreground: 42 42 74;      /* #2a2a4a */
+    --destructive: 255 84 112;          /* #ff5470 */
+    --destructive-foreground: 255 255 255; /* #ffffff */
+    --border: 224 224 240;              /* #e0e0f0 */
+    --input: 224 224 240;               /* #e0e0f0 */
+    --ring: 110 86 207;                 /* #6e56cf */
     --radius: 0.5rem;
 
-    --chart-1: #6e56cf;
-    --chart-2: #9e8cfc;
-    --chart-3: #5d5fef;
-    --chart-4: #7c75fa;
-    --chart-5: #4740b3;
+    --chart-1: 110 86 207;              /* #6e56cf */
+    --chart-2: 158 140 252;             /* #9e8cfc */
+    --chart-3: 93 95 239;               /* #5d5fef */
+    --chart-4: 124 117 250;             /* #7c75fa */
+    --chart-5: 71 64 179;               /* #4740b3 */
 
     /* 业务状态语义化色彩 Tokens (遵循 AGENTS.md 规范) */
-    --state-working: #c084fc;       /* 专注/工作中 */
-    --state-alerting: #ff5470;      /* 提醒/警报中 */
-    --state-away: #64b5f6;          /* 离座/暂离 */
-    --state-offduty: #a855f7;       /* 午休/下班 */
-    --state-paused: #fbbf24;        /* 暂停中 */
-    --state-ready: #4db6ac;         /* 成功/就绪状态 */
-    --traffic-close: #ff5f57;       /* 窗口关闭红 */
-    --traffic-minimize: #febc2e;    /* 窗口最小化黄 */
-    --traffic-maximize: #28c840;    /* 窗口最大化绿 */
+    --state-working: 192 132 252;       /* #c084fc 专注/工作中 */
+    --state-alerting: 255 84 112;       /* #ff5470 提醒/警报中 */
+    --state-away: 100 181 246;          /* #64b5f6 离座/暂离 */
+    --state-offduty: 168 85 247;        /* #a855f7 午休/下班 */
+    --state-paused: 251 191 36;         /* #fbbf24 暂停中 */
+    --state-ready: 77 182 172;          /* #4db6ac 成功/就绪状态 */
+    --traffic-close: 255 95 87;         /* #ff5f57 窗口关闭红 */
+    --traffic-minimize: 254 188 46;     /* #febc2e 窗口最小化黄 */
+    --traffic-maximize: 40 200 64;      /* #28c840 窗口最大化绿 */
 
     /* 随行挂件常驻色彩系统（不受白天黑夜模式破坏） */
     --purple-glow: #c084fc;
@@ -63,32 +67,32 @@
 
   .dark {
     /* ================= Tweakcn Cosmic Night (黑夜模式 / Dark) ================= */
-    --background: #0f0f1a;
-    --foreground: #e2e2f5;
-    --card: #1a1a2e;
-    --card-foreground: #e2e2f5;
-    --popover: #1a1a2e;
-    --popover-foreground: #e2e2f5;
-    --primary: #a48fff;
-    --primary-foreground: #0f0f1a;
-    --secondary: #2d2b55;
-    --secondary-foreground: #c4c2ff;
-    --muted: #222244;
-    --muted-foreground: #a0a0c0;
-    --accent: #303060;
-    --accent-foreground: #e2e2f5;
-    --destructive: #ff5470;
-    --destructive-foreground: #ffffff;
-    --border: #303052;
-    --input: #303052;
-    --ring: #a48fff;
+    --background: 15 15 26;             /* #0f0f1a */
+    --foreground: 226 226 245;          /* #e2e2f5 */
+    --card: 26 26 46;                   /* #1a1a2e */
+    --card-foreground: 226 226 245;     /* #e2e2f5 */
+    --popover: 26 26 46;                /* #1a1a2e */
+    --popover-foreground: 226 226 245;  /* #e2e2f5 */
+    --primary: 164 143 255;             /* #a48fff */
+    --primary-foreground: 15 15 26;     /* #0f0f1a */
+    --secondary: 45 43 85;              /* #2d2b55 */
+    --secondary-foreground: 196 194 255; /* #c4c2ff */
+    --muted: 34 34 68;                  /* #222244 */
+    --muted-foreground: 160 160 192;    /* #a0a0c0 */
+    --accent: 48 48 96;                 /* #303060 */
+    --accent-foreground: 226 226 245;   /* #e2e2f5 */
+    --destructive: 255 84 112;          /* #ff5470 */
+    --destructive-foreground: 255 255 255; /* #ffffff */
+    --border: 48 48 82;                 /* #303052 */
+    --input: 48 48 82;                  /* #303052 */
+    --ring: 164 143 255;                /* #a48fff */
     --radius: 0.5rem;
 
-    --chart-1: #a48fff;
-    --chart-2: #7986cb;
-    --chart-3: #64b5f6;
-    --chart-4: #4db6ac;
-    --chart-5: #ff79c6;
+    --chart-1: 164 143 255;             /* #a48fff */
+    --chart-2: 121 134 203;             /* #7986cb */
+    --chart-3: 100 181 246;             /* #64b5f6 */
+    --chart-4: 77 182 172;              /* #4db6ac */
+    --chart-5: 255 121 198;             /* #ff79c6 */
   }
 }
 
@@ -101,11 +105,11 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--border);
+  background: rgb(var(--border));
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--primary);
+  background: rgb(var(--primary));
 }
 
 * {
@@ -122,7 +126,7 @@ html, body {
   overscroll-behavior-x: none !important;
   overscroll-behavior-y: none !important;
   background: transparent !important;
-  color: var(--foreground);
+  color: rgb(var(--foreground));
   user-select: none !important;
   -webkit-user-select: none !important;
   -webkit-user-drag: none !important;
