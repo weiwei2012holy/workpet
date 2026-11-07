@@ -130,6 +130,16 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '>=1.23'
+          check-latest: true
+
+      - name: Install Wails v3 CLI
+        run: |
+          go install github.com/wailsapp/wails/v3/cmd/wails3@latest
+
       - name: Download macOS Artifact
         uses: actions/download-artifact@v4
         with:
@@ -149,6 +159,24 @@ jobs:
           cat SHA256SUMS
           cd ..
 
+      - name: Generate Signed Update Manifest
+        env:
+          UPDATER_KEY: ${{ secrets.UPDATER_PRIVATE_KEY }}
+        run: |
+          VERSION="${{ github.ref_name }}"
+          if [ -n "$UPDATER_KEY" ]; then
+            echo "$UPDATER_KEY" > updater.key
+            chmod 600 updater.key
+            wails3 updater manifest -version "$VERSION" -key updater.key -output ./release-assets/manifest.json ./release-assets/*.zip
+            wails3 updater verify -manifest ./release-assets/manifest.json -publickey build/updater.key.pub ./release-assets/*.zip
+            rm -f updater.key
+            echo "✅ 成功使用 Ed25519 签名生成 manifest.json 并完成自校验"
+          else
+            echo "⚠️ 未检测到 UPDATER_PRIVATE_KEY Secret，生成未签名 manifest 清单"
+            wails3 updater manifest -version "$VERSION" -output ./release-assets/manifest.json ./release-assets/*.zip
+          fi
+          cat ./release-assets/manifest.json
+
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -158,6 +186,7 @@ jobs:
             ./release-assets/workpet-windows-amd64.zip
             ./release-assets/workpet-windows-x64.zip
             ./release-assets/SHA256SUMS
+            ./release-assets/manifest.json
           generate_release_notes: true
           draft: false
           prerelease: false

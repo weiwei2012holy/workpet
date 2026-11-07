@@ -16,6 +16,7 @@ import (
 
 	"github.com/wailsapp/wails/v3/pkg/application"
 	wailsUpdater "github.com/wailsapp/wails/v3/pkg/updater"
+	"github.com/wailsapp/wails/v3/pkg/updater/providers/endpoint"
 	"github.com/wailsapp/wails/v3/pkg/updater/providers/github"
 )
 
@@ -71,23 +72,44 @@ func (s *Service) SetApp(app *application.App) {
 		return
 	}
 
-	// 1. 初始化 GitHub Release Provider（配置智能匹配器，兼容 darwin / macos / windows 各种命名规范）
+	// 1. 初始化基于 Wails Update Manifest 协议的签名更新源（直接校验 Ed25519 签名，且走静态直链完全免 API 限流）
+	manifestURL := fmt.Sprintf("https://github.com/%s/releases/latest/download/manifest.json", s.githubRepo)
+	manifestProvider, err := endpoint.New(endpoint.Config{
+		URL: manifestURL,
+	})
+	if err != nil {
+		log.Printf("[Updater] 初始化 Manifest Provider 失败: %v", err)
+	}
+
+	// 2. 初始化 GitHub Release 原生 API Provider（备用更新源）
 	provider, err := github.New(github.Config{
-		Repository:   s.githubRepo,
-		AssetMatcher: customAssetMatcher,
+		Repository:    s.githubRepo,
+		AssetMatcher:  customAssetMatcher,
+		ChecksumAsset: "SHA256SUMS",
 	})
 	if err != nil {
 		log.Printf("[Updater] 初始化 GitHub Provider 失败: %v", err)
-		return
 	}
 	s.provider = provider
 
-	// 2. 将 Provider 注册给 Wails v3 原生 Updater（增加 GitHub Web 免限流兜底更新源）
+	// 3. 初始化 GitHub Web 免限流兜底更新源
 	webFallback := NewWebFallbackProvider(s.githubRepo)
+
+	var providers []wailsUpdater.Provider
+	if manifestProvider != nil {
+		providers = append(providers, manifestProvider)
+	}
+	if provider != nil {
+		providers = append(providers, provider)
+	}
+	providers = append(providers, webFallback)
+
+	// 4. 将 Provider 注册给 Wails v3 原生 Updater，启用内嵌公钥强验证（Fail-Closed 模式）
 	err = app.Updater.Init(wailsUpdater.Config{
 		CurrentVersion: s.currentVersion,
-		Providers:      []wailsUpdater.Provider{provider, webFallback},
-		CheckInterval:  6 * time.Hour, // 每 6 小时后台静默轮询一次
+		Providers:      providers,
+		CheckInterval:  6 * time.Hour,     // 每 6 小时后台静默轮询一次
+		PublicKey:      UpdaterPublicKey, // 🔒 注入 Ed25519 信任根，杜绝任何无签名或伪造更新
 	})
 	if err != nil && err != wailsUpdater.ErrAlreadyConfigured {
 		log.Printf("[Updater] 初始化 Wails Updater 引擎失败: %v", err)
@@ -279,7 +301,7 @@ func customAssetMatcher(req wailsUpdater.CheckRequest, assets []github.ReleaseAs
 
 	for i, a := range assets {
 		name := strings.ToLower(a.Name)
-		if strings.HasSuffix(name, ".sig") || strings.HasSuffix(name, ".asc") || strings.HasSuffix(name, ".txt") || strings.Contains(name, "sha256") {
+		if strings.HasSuffix(name, ".sig") || strings.HasSuffix(name, ".asc") || strings.HasSuffix(name, ".txt") || strings.Contains(name, "sha256") || strings.HasSuffix(name, ".json") {
 			continue
 		}
 

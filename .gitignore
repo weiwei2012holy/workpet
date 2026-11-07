@@ -9,3 +9,7 @@ build/ios/xcode/overlay.json
 build/ios/xcode/gen/
 build/android/overlay.json
 build/android/gen/
+
+# Updater signing private key (MUST NEVER BE COMMITTED)
+*.key
+build/updater.key

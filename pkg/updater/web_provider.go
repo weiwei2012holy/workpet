@@ -8,6 +8,8 @@ package updater
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -87,12 +89,29 @@ func (p *WebFallbackProvider) Check(ctx context.Context, req wailsUpdater.CheckR
 	}
 	downloadURL := fmt.Sprintf("https://github.com/%s/releases/download/%s/%s", p.repository, tag, filename)
 
+	// 尝试拉取同 Release 下由私钥签署的 manifest.json，获取 Ed25519 防伪数字签名
+	var verification *wailsUpdater.Verification
+	manifestURL := fmt.Sprintf("https://github.com/%s/releases/download/%s/manifest.json", p.repository, tag)
+	if mReq, err := http.NewRequestWithContext(ctx, http.MethodGet, manifestURL, nil); err == nil {
+		mReq.Header.Set("User-Agent", "Mozilla/5.0 WorkPet-Desktop-Updater")
+		dlClient := &http.Client{Timeout: 10 * time.Second}
+		if mResp, err := dlClient.Do(mReq); err == nil {
+			if mResp.StatusCode == http.StatusOK {
+				if body, err := io.ReadAll(io.LimitReader(mResp.Body, 1<<20)); err == nil {
+					verification = extractVerificationFromManifest(body, req.Platform, req.Arch)
+				}
+			}
+			mResp.Body.Close()
+		}
+	}
+
 	return &wailsUpdater.Release{
-		Version:     strings.TrimPrefix(tag, "v"),
-		Channel:     "stable",
-		Name:        tag,
-		Notes:       fmt.Sprintf("WorkPet %s 优化了多项桌面端体验与性能并修复了已知缺陷。", tag),
-		PublishedAt: time.Now(),
+		Version:      strings.TrimPrefix(tag, "v"),
+		Channel:      "stable",
+		Name:         tag,
+		Notes:        fmt.Sprintf("WorkPet %s 优化了多项桌面端体验与性能并修复了已知缺陷。", tag),
+		PublishedAt:  time.Now(),
+		Verification: verification,
 		Artifact: wailsUpdater.Artifact{
 			Filename: filename,
 			Filetype: "zip",
@@ -193,4 +212,77 @@ func isNewerVersion(remote, current string) bool {
 		}
 	}
 	return false
+}
+
+// manifestPayload 对应 Wails Update Manifest 协议规范结构
+type manifestPayload struct {
+	Version   string             `json:"version"`
+	Artifacts []manifestArtifact `json:"artifacts"`
+}
+
+type manifestArtifact struct {
+	Platform      string `json:"platform"`
+	Arch          string `json:"arch"`
+	DigestAlgo    string `json:"digestAlgo"`
+	Digest        string `json:"digest"`
+	SignatureAlgo string `json:"signatureAlgo"`
+	Signature     string `json:"signature"`
+}
+
+// extractVerificationFromManifest 从清单 JSON 中按平台架构解析并还原 Verification
+func extractVerificationFromManifest(raw []byte, platform, arch string) *wailsUpdater.Verification {
+	var payload manifestPayload
+	if err := json.Unmarshal(raw, &payload); err != nil {
+		return nil
+	}
+
+	wantPlat := strings.ToLower(platform)
+	wantArch := strings.ToLower(arch)
+
+	for _, a := range payload.Artifacts {
+		p := strings.ToLower(a.Platform)
+		// 平台匹配逻辑（兼容 darwin/macos, windows/win 等别名）
+		platMatched := p == wantPlat ||
+			(wantPlat == "darwin" && (p == "macos" || p == "mac")) ||
+			(wantPlat == "windows" && (p == "win" || p == "win64"))
+
+		if !platMatched && a.Platform != "" {
+			continue
+		}
+
+		// 架构匹配
+		aArch := strings.ToLower(a.Arch)
+		archMatched := aArch == "" || aArch == wantArch ||
+			(wantArch == "amd64" && (aArch == "x86_64" || aArch == "x64")) ||
+			(wantArch == "arm64" && aArch == "aarch64")
+
+		if !archMatched {
+			continue
+		}
+
+		sig, err := base64.StdEncoding.DecodeString(a.Signature)
+		if err != nil || len(sig) == 0 {
+			// 尝试无补齐 raw base64 解码
+			sig, err = base64.RawStdEncoding.DecodeString(a.Signature)
+			if err != nil || len(sig) == 0 {
+				continue
+			}
+		}
+
+		var digest []byte
+		if a.Digest != "" {
+			digest, _ = base64.StdEncoding.DecodeString(a.Digest)
+			if len(digest) == 0 {
+				digest, _ = base64.RawStdEncoding.DecodeString(a.Digest)
+			}
+		}
+
+		return &wailsUpdater.Verification{
+			DigestAlgo:    a.DigestAlgo,
+			Digest:        digest,
+			SignatureAlgo: a.SignatureAlgo,
+			Signature:     sig,
+		}
+	}
+	return nil
 }
