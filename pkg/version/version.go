@@ -11,7 +11,7 @@ import "strings"
 // Version 全局应用程序版本号。
 // 默认版本为开发态版本，CI/CD 在发布 Git Tag 时会通过以下参数动态注入：
 // -ldflags "-X workpet/pkg/version.Version=${TAG}"
-var Version = "v0.1.1"
+var Version = "v0.1.2"
 
 // GetVersion 获取标准语义化版本号字符串（如 "v0.0.3"）
 func GetVersion() string {
