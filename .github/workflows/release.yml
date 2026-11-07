@@ -169,16 +169,7 @@ jobs:
         run: |
           VERSION="${{ github.ref_name }}"
           if [ -n "$UPDATER_KEY" ]; then
-            python3 -c "
-import os
-k = os.environ.get('UPDATER_KEY', '').strip()
-if '\\\n' in k and '\n' not in k:
-    k = k.replace('\\\\n', '\n')
-elif '\\n' in k and '\n' not in k:
-    k = k.replace('\\n', '\n')
-with open('updater.key', 'w', encoding='utf-8') as f:
-    f.write(k.strip() + '\n')
-"
+            python3 scripts/restore-key.py updater.key
             chmod 600 updater.key
             wails3 updater manifest -version "$VERSION" -key updater.key -output ./release-assets/manifest.json ./release-assets/*.zip
             wails3 updater verify -manifest ./release-assets/manifest.json -publickey build/updater.key.pub ./release-assets/*.zip
