@@ -1,6 +1,6 @@
 /**
  * @Author wei
- * @Date 2026-11-06
+ * @Date 2026-11-09
  * @Description 全局配置与窗口位置持久化管理模块，负责读写 ~/.workpet/config.json，包含小组件与工具启闭状态及午休/下班长时间离座阈值
  **/
 
@@ -67,6 +67,7 @@ func NewConfigManager() *ConfigManager {
 			AutoHideWidget:   false, // 默认桌面常驻，避免点击或失焦时意外消失
 			EnabledTools:     []string{"activity", "datetime"},
 			DashboardWidgets: []string{
+				"activity-timer",
 				"activity-focus-today",
 				"activity-rest-today",
 				"activity-trend",

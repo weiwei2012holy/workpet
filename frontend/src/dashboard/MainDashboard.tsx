@@ -48,6 +48,7 @@ export const MainDashboard: React.FC = () => {
     globalShortcut: "CmdOrCtrl+Shift+R",
     enabledTools: ["activity", "datetime"],
     dashboardWidgets: [
+      "activity-timer",
       "activity-focus-today",
       "activity-rest-today",
       "activity-trend",

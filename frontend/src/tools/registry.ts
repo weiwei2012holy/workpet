@@ -5,6 +5,7 @@
  **/
 
 import React from "react";
+import { FocusTimerWidget } from "./activity/widgets/FocusTimerWidget";
 import { TodayFocusWidget } from "./activity/widgets/TodayFocusWidget";
 import { TodayRestWidget } from "./activity/widgets/TodayRestWidget";
 import { HourlyTrendWidget } from "./activity/widgets/HourlyTrendWidget";
@@ -54,6 +55,18 @@ export const REGISTERED_TOOLS: ToolDefinition[] = [
 
 // 当前已注册的指标小组件注册表
 export const REGISTERED_METRIC_WIDGETS: MetricWidgetDefinition[] = [
+  {
+    id: "activity-timer",
+    toolId: "activity",
+    title: "专注倒计时",
+    description: "桌面随行同款实时专注倒计时时钟，支持快捷暂停/继续、重置与休息确认",
+    size: "1x1",
+    icon: "⏱️",
+    render: (props) =>
+      React.createElement(FocusTimerWidget, {
+        reminderState: props.reminderState,
+      }),
+  },
   {
     id: "activity-focus-today",
     toolId: "activity",
