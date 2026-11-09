@@ -190,20 +190,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           )}
         </div>
 
-        {/* 右下角悬浮添加组件按钮 (Floating Action Button) */}
+        {/* 右下角悬浮添加组件按钮 (纯图标 FAB) */}
         <div className="absolute bottom-6 right-8 z-30 pointer-events-auto">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 onClick={onOpenGallery}
-                className="h-10 px-4 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/35 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 text-xs font-semibold border border-primary-foreground/15 cursor-pointer"
+                size="icon"
+                className="size-11 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/35 hover:scale-110 active:scale-95 transition-all border border-primary-foreground/15 cursor-pointer"
               >
-                <Plus className="size-4" />
-                <span>添加组件</span>
+                <Plus className="size-5" />
+                <span className="sr-only">添加组件</span>
               </Button>
             </TooltipTrigger>
             <TooltipContent side="left">
-              <span>自定义看板，挑选并添加更多组件</span>
+              <span>添加小组件</span>
             </TooltipContent>
           </Tooltip>
         </div>
