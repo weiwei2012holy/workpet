@@ -1,15 +1,13 @@
 /**
  * @Author wei
- * @Date 2026-11-05
- * @Description 仪表盘视图（DashboardView），使用 shadcn/ui 标准组件体系（Tooltip/Separator/Button/Badge）重构
+ * @Date 2026-11-09
+ * @Description 仪表盘视图（DashboardView），精简移除冗余标题横幅，采用纯粹网格布局与幽灵添加卡片重构
  **/
 
 import React, { useState } from "react";
-import { Plus, LayoutGrid, Sparkles, X, GripHorizontal } from "lucide-react";
+import { Plus, X, GripHorizontal } from "lucide-react";
 import { REGISTERED_METRIC_WIDGETS } from "../tools/registry";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import {
   Tooltip,
   TooltipContent,
@@ -100,45 +98,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="flex-1 overflow-y-auto px-8 py-6 flex flex-col gap-6">
-        {/* 顶部看板横幅与操作区：精炼标题与纯加号添加按钮 */}
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <h2 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
-                <LayoutGrid className="size-5 text-primary" />
-                指标看板
-              </h2>
-              <Badge variant="default" className="text-xs px-2 py-0.5 flex items-center gap-1 bg-primary text-primary-foreground font-medium">
-                <Sparkles className="size-3" />
-                <span>实时</span>
-              </Badge>
-            </div>
-
-            {/* 添加小组件按钮：规范 Tooltip 包装 */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={onOpenGallery}
-                  size="icon"
-                  className="size-8 rounded-lg bg-primary text-primary-foreground hover:opacity-90 shadow-sm transition-transform active:scale-95"
-                >
-                  <Plus className="size-4" />
-                  <span className="sr-only">添加小组件</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="left">
-                <span>添加小组件</span>
-              </TooltipContent>
-            </Tooltip>
-          </div>
-
-          <Separator />
-        </div>
-
+      <div className="flex-1 overflow-y-auto px-8 py-6">
         {/* 小组件网格系统 (Widget Grid) */}
         {visibleWidgets.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {visibleWidgets.map((widgetDef) => {
               const isSpan2 = widgetDef.size === "2x1";
               const isDragging = draggedId === widgetDef.id;
@@ -199,6 +162,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 </div>
               );
             })}
+
+            {/* 网格末尾幽灵添加卡片 (Add Widget Ghost Card) */}
+            <button
+              onClick={onOpenGallery}
+              className="h-[180px] rounded-xl border-2 border-dashed border-border/70 bg-card/20 hover:bg-card/60 hover:border-primary/50 transition-all flex flex-col items-center justify-center gap-2.5 text-muted-foreground hover:text-foreground group/add select-none p-4"
+              title="挑选并添加更多组件至看板"
+            >
+              <div className="size-10 rounded-xl bg-muted/60 border border-border flex items-center justify-center text-muted-foreground group-hover/add:text-primary group-hover/add:border-primary/40 group-hover/add:scale-110 transition-all shadow-inner">
+                <Plus className="size-5" />
+              </div>
+              <div className="flex flex-col items-center gap-0.5">
+                <span className="text-xs font-semibold text-foreground/80 group-hover/add:text-foreground">添加小组件</span>
+                <span className="text-[11px] text-muted-foreground font-mono">自定义桌面布局</span>
+              </div>
+            </button>
           </div>
         ) : (
           /* 空看板引导：符合 shadcn 规范的空状态 */

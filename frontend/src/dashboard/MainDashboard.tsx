@@ -5,9 +5,10 @@
  **/
 
 import React, { useState, useEffect } from "react";
-import { LayoutGrid, Wrench, Sliders, ExternalLink, Minus, X } from "lucide-react";
+import { LayoutGrid, Wrench, Sliders, ExternalLink, Minus, X, Plus } from "lucide-react";
 import ShinyText from "@/components/ShinyText/ShinyText";
 import ClickSpark from "@/components/ClickSpark/ClickSpark";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -279,11 +280,24 @@ export const MainDashboard: React.FC = () => {
             </Tabs>
           </div>
 
-          {/* 右侧辅助操作：外观明暗切换 */}
+          {/* 右侧辅助操作：添加组件（仅指标看板时显示） + 外观明暗切换 */}
           <div
             style={{ "--wails-draggable": "no-drag" } as React.CSSProperties}
             className="flex items-center gap-2.5"
           >
+            {activeTab === "dashboard" && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsGalleryOpen(true)}
+                className="flex items-center gap-1.5 text-xs text-foreground border-border bg-card hover:bg-accent px-2.5 py-1.5 shadow-none"
+                title="打开小组件画廊，添加更多卡片"
+              >
+                <Plus size={13} className="text-primary" />
+                <span>添加组件</span>
+              </Button>
+            )}
+
             {/* 白天 / 黑夜 / 跟随系统 模式切换按钮 */}
             <ThemeToggle />
           </div>
