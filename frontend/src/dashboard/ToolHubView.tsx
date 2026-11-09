@@ -56,16 +56,13 @@ export const ToolHubView: React.FC<ToolHubViewProps> = ({
       {/* 工具列表卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {REGISTERED_TOOLS.map((tool) => {
-          const isComingSoon = tool.status === "coming_soon";
-          const isEnabled = !isComingSoon && enabledTools.includes(tool.id);
+          const isEnabled = enabledTools.includes(tool.id);
 
           return (
             <Card
               key={tool.id}
               className={`p-5 flex flex-col justify-between transition-all ${
-                isComingSoon
-                  ? "bg-muted/20 border-border/40 opacity-70"
-                  : isEnabled
+                isEnabled
                   ? "bg-card border-border shadow-sm hover:border-primary/50"
                   : "bg-muted/40 border-border/50 opacity-60"
               }`}
@@ -85,11 +82,6 @@ export const ToolHubView: React.FC<ToolHubViewProps> = ({
                             运行中
                           </Badge>
                         )}
-                        {isComingSoon && (
-                          <Badge variant="outline" className="text-[11px] px-1.5 py-0 text-muted-foreground border-border/80 border-dashed">
-                            规划中
-                          </Badge>
-                        )}
                       </h3>
                       <span className="text-xs text-muted-foreground font-mono mt-0.5 block">
                         插件标识: {tool.id}
@@ -97,17 +89,11 @@ export const ToolHubView: React.FC<ToolHubViewProps> = ({
                     </div>
                   </div>
 
-                  {/* 启闭 Switch / 占位提示 */}
-                  {isComingSoon ? (
-                    <Badge variant="secondary" className="text-[11px] font-normal text-muted-foreground">
-                      即将推出
-                    </Badge>
-                  ) : (
-                    <Switch
-                      checked={isEnabled}
-                      onCheckedChange={(checked) => onToggleTool(tool.id, checked)}
-                    />
-                  )}
+                  {/* 启闭 Switch */}
+                  <Switch
+                    checked={isEnabled}
+                    onCheckedChange={(checked) => onToggleTool(tool.id, checked)}
+                  />
                 </div>
 
                 {/* 描述信息 */}
@@ -119,7 +105,7 @@ export const ToolHubView: React.FC<ToolHubViewProps> = ({
               {/* 底部操作与配置 */}
               <div className="flex items-center justify-between pt-3.5 border-t border-border">
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <ShieldCheck size={14} className={isComingSoon ? "text-muted-foreground" : "text-primary"} />
+                  <ShieldCheck size={14} className="text-primary" />
                   <span>内置官方插件</span>
                 </div>
 
@@ -152,11 +138,7 @@ export const ToolHubView: React.FC<ToolHubViewProps> = ({
                     <Clock size={13} />
                     <span>打开转换器</span>
                   </Button>
-                ) : (
-                  <span className="text-xs text-muted-foreground font-mono">
-                    待后续版本接入
-                  </span>
-                )}
+                ) : null}
               </div>
             </Card>
           );
