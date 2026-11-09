@@ -1,9 +1,9 @@
 #!/bin/bash
-/**
- * @Author wei
- * @Date 2026-11-09
- * @Description WorkPet 一键自动化发版脚本，支持交互式与静默参数调用，自动校验分支状态、同步版本号、创建 Git Tag 并推送触发 GitHub Actions 自动编译与 Release 发布
- **/
+# /**
+#  * @Author wei
+#  * @Date 2026-11-09
+#  * @Description WorkPet 一键自动化发版脚本，支持交互式与静默参数调用，自动校验分支状态、同步版本号、创建 Git Tag 并推送触发 GitHub Actions 自动编译与 Release 发布
+#  **/
 
 set -e
 
