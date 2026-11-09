@@ -1,7 +1,7 @@
 /**
  * @Author wei
- * @Date 2026-11-06
- * @Description 应用程序主入口，负责装配系统级通用特性（随行挂件、无边框控制看板双窗口、系统托盘、Dock 栏常驻、开机自启）与各工具插件
+ * @Date 2026-11-09
+ * @Description 应用程序主入口，负责装配系统级通用特性（单实例互斥、随行挂件、无边框控制看板双窗口、系统托盘、Dock 栏常驻、开机自启）与各工具插件
  **/
 
 package main
@@ -62,6 +62,17 @@ func main() {
 		Mac: application.MacOptions{
 			ActivationPolicy:                                application.ActivationPolicyRegular,
 			ApplicationShouldTerminateAfterLastWindowClosed: false,
+		},
+		Windows: application.WindowsOptions{
+			DisableQuitOnLastWindowClosed: true,
+		},
+		SingleInstance: &application.SingleInstanceOptions{
+			UniqueID: "com.workpet.desktop",
+			OnSecondInstanceLaunch: func(data application.SecondInstanceData) {
+				// 当已有实例运行时，再次启动自动激活并置顶已有界面，避免重复启动冲突
+				systemService.OpenDashboard()
+				activityService.ShowWindow()
+			},
 		},
 		Assets: application.AssetOptions{
 			Handler: application.AssetFileServerFS(assets),
