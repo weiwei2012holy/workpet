@@ -8,7 +8,6 @@ import React, { useState, useEffect } from "react";
 import { LayoutGrid, Wrench, Sliders, ExternalLink, Minus, X } from "lucide-react";
 import ShinyText from "@/components/ShinyText/ShinyText";
 import ClickSpark from "@/components/ClickSpark/ClickSpark";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -280,25 +279,13 @@ export const MainDashboard: React.FC = () => {
             </Tabs>
           </div>
 
-          {/* 右侧辅助操作：外观明暗切换 + 唤出随行挂件 */}
+          {/* 右侧辅助操作：外观明暗切换 */}
           <div
             style={{ "--wails-draggable": "no-drag" } as React.CSSProperties}
             className="flex items-center gap-2.5"
           >
             {/* 白天 / 黑夜 / 跟随系统 模式切换按钮 */}
             <ThemeToggle />
-
-            {/* 打开随行挂件 */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => SystemService.OpenWidget()}
-              className="flex items-center gap-1.5 text-xs text-foreground border-border bg-card hover:bg-accent px-2.5 py-1.5"
-              title="置顶唤醒桌面迷你随行挂件"
-            >
-              <ExternalLink size={13} className="text-primary" />
-              <span>随行挂件</span>
-            </Button>
           </div>
         </header>
 
