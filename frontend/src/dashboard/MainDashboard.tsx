@@ -1,7 +1,7 @@
 /**
  * @Author wei
- * @Date 2026-11-06
- * @Description 无边框控制看板主视口（MainDashboard），支持午休/下班长时间离座排除配置联动，100% 严谨采用 Tweakcn Cosmic Night 官方规范
+ * @Date 2026-11-09
+ * @Description 无边框控制看板主视口（MainDashboard），支持午休/下班长时间离座排除配置联动与工具箱今日数据实时透传，100% 严谨采用 Tweakcn Cosmic Night 官方规范
  **/
 
 import React, { useState, useEffect } from "react";
@@ -325,6 +325,8 @@ export const MainDashboard: React.FC = () => {
                 offDutyThresholdMinutes: reminderState.offDutyThresholdMinutes || 30,
               }}
               onActivityConfigSaved={handleActivityConfigSaved}
+              stats={stats}
+              reminderState={reminderState}
             />
           )}
 

@@ -1,13 +1,14 @@
 /**
  * @Author wei
- * @Date 2026-11-06
- * @Description 工具箱管理视图（ToolHubView），支持午休/下班长时间离座判定阈值配置传递，100% 严谨采用 Tweakcn Cosmic Night 调色规范
+ * @Date 2026-11-09
+ * @Description 工具箱管理视图（ToolHubView），增加“今日数据”全景弹窗查看入口，100% 严谨采用 Tweakcn Cosmic Night 调色规范与 shadcn 规范
  **/
 
 import React, { useState } from "react";
-import { Wrench, Settings, ShieldCheck, Clock } from "lucide-react";
+import { Wrench, Settings, ShieldCheck, Clock, BarChart3 } from "lucide-react";
 import { REGISTERED_TOOLS } from "../tools/registry";
 import { ActivitySettingsModal } from "../tools/activity/ActivitySettingsModal";
+import { ActivityDataModal } from "../tools/activity/ActivityDataModal";
 import { DateConverterModal } from "../tools/datetime/DateConverterModal";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -23,6 +24,8 @@ interface ToolHubViewProps {
     offDutyThresholdMinutes?: number;
   };
   onActivityConfigSaved: (interval: number, idleThreshold: number, offDutyThreshold: number) => void;
+  stats?: any;
+  reminderState?: any;
 }
 
 export const ToolHubView: React.FC<ToolHubViewProps> = ({
@@ -30,19 +33,22 @@ export const ToolHubView: React.FC<ToolHubViewProps> = ({
   onToggleTool,
   activityConfig,
   onActivityConfigSaved,
+  stats,
+  reminderState,
 }) => {
   const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
+  const [isActivityDataModalOpen, setIsActivityDataModalOpen] = useState(false);
   const [isDateTimeModalOpen, setIsDateTimeModalOpen] = useState(false);
 
   return (
-    <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
+    <div className="flex-1 overflow-y-auto px-8 py-6 flex flex-col gap-6">
       {/* 顶部标题区 */}
-      <div className="pb-4 border-b border-border">
+      <div className="pb-4 border-b border-border flex flex-col gap-1">
         <h2 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
           <Wrench size={22} className="text-primary" />
           工具箱与插件管理
         </h2>
-        <p className="text-sm text-muted-foreground mt-1">
+        <p className="text-sm text-muted-foreground">
           集中管理 WorkPet 桌面端所支持的功能插件，支持自由开启、禁用及深度设置
         </p>
       </div>
@@ -118,15 +124,25 @@ export const ToolHubView: React.FC<ToolHubViewProps> = ({
                 </div>
 
                 {tool.id === "activity" ? (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsActivityModalOpen(true)}
-                    className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 border-border text-foreground hover:bg-accent"
-                  >
-                    <Settings size={13} />
-                    <span>配置参数</span>
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsActivityModalOpen(true)}
+                      className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 border-border text-foreground hover:bg-accent"
+                    >
+                      <Settings size={13} />
+                      <span>配置参数</span>
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => setIsActivityDataModalOpen(true)}
+                      className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 bg-primary text-primary-foreground hover:opacity-90 shadow-sm"
+                    >
+                      <BarChart3 size={13} />
+                      <span>今日数据</span>
+                    </Button>
+                  </div>
                 ) : tool.id === "datetime" ? (
                   <Button
                     size="sm"
@@ -155,6 +171,15 @@ export const ToolHubView: React.FC<ToolHubViewProps> = ({
         currentIdleThreshold={activityConfig.idleThresholdMinutes}
         currentOffDutyThreshold={activityConfig.offDutyThresholdMinutes || 30}
         onSaved={onActivityConfigSaved}
+      />
+
+      {/* 今日活动与专注全景数据弹窗 */}
+      <ActivityDataModal
+        isOpen={isActivityDataModalOpen}
+        onClose={() => setIsActivityDataModalOpen(false)}
+        onOpenSettings={() => setIsActivityModalOpen(true)}
+        initialStats={stats}
+        initialReminderState={reminderState}
       />
 
       {/* 日期与时间戳转换工作台弹窗 */}
