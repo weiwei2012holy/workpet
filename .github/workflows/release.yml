@@ -16,6 +16,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -77,6 +79,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -129,6 +133,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -181,9 +187,23 @@ jobs:
           fi
           cat ./release-assets/manifest.json
 
+      - name: Extract Release Notes from Tag
+        run: |
+          # 从 Git Annotated Tag 中提取完整的附注发布说明
+          TAG_MSG=$(git tag -l --format='%(contents)' "${{ github.ref_name }}")
+          if [ -n "$TAG_MSG" ]; then
+            echo "$TAG_MSG" > release-notes.md
+          else
+            echo "WorkPet 桌面端 ${{ github.ref_name }} 版本正式发布。" > release-notes.md
+          fi
+          echo "==== 提取的 Release Notes ===="
+          cat release-notes.md
+          echo "==============================="
+
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          body_path: release-notes.md
           files: |
             ./release-assets/workpet-darwin-universal.zip
             ./release-assets/workpet-macOS.zip
