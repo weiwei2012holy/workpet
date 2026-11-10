@@ -1,21 +1,20 @@
 /**
  * @Author wei
  * @Date 2026-11-10
- * @Description 仪表盘指标小组件：专注时钟，保留左上角标志性ICON与右上角挂件，去除文字说明，状态点移至暂停重置按钮前
+ * @Description 仪表盘指标小组件：专注时钟（左右分栏方案：左侧 360 度圆环倒计时 + 右侧靶心状态与大圆形主控按钮）
  **/
 
 import React, { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import {
-  Timer,
   Play,
   Pause,
   RotateCcw,
   Coffee,
-  BellRing,
-  Moon,
   ExternalLink,
+  Target,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import * as ActivityService from "@/../bindings/workpet/pkg/tools/activity/service";
@@ -40,8 +39,15 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
   const elapsedSecs = Math.max(0, state.elapsedSeconds ?? 0);
   const intervalMins = Math.max(1, state.intervalMinutes ?? 30);
   const totalTargetSecs = intervalMins * 60;
-  const progressPercent = Math.min(100, Math.round((elapsedSecs / totalTargetSecs) * 100));
-  const progressRatio = progressPercent / 100;
+  
+  // 倒计时剩余秒数与格式化
+  const remainingSecs = Math.max(0, totalTargetSecs - elapsedSecs);
+  const remMins = Math.floor(remainingSecs / 60);
+  const remSecs = remainingSecs % 60;
+  const timeFormatted = `${String(remMins).padStart(2, "0")}:${String(remSecs).padStart(2, "0")}`;
+
+  // 进度比例 (0 ~ 1)
+  const progressRatio = Math.min(1, Math.max(0, elapsedSecs / totalTargetSecs));
 
   const isReminding = !!state.isReminding;
   const isOffDuty = !!state.isOffDuty;
@@ -57,16 +63,15 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
     ? "rgb(var(--state-away))"
     : "rgb(var(--primary))";
 
-  const remainingColor = isReminding
-    ? "rgb(var(--destructive) / 0.18)"
+  const trackColor = isReminding
+    ? "rgb(var(--destructive) / 0.16)"
     : isPaused
-    ? "rgb(245 158 11 / 0.18)"
+    ? "rgb(245 158 11 / 0.16)"
     : "rgb(var(--primary) / 0.16)";
 
-  // 半圆几何参数：半径 R = 60，全半圆周长 L = PI * 60 = 188.5
-  const ARC_LENGTH = 188.5;
-  const activeLength = Math.max(0.1, ARC_LENGTH * progressRatio);
-  const remainingLength = Math.max(0.1, ARC_LENGTH * (1 - progressRatio));
+  // 360 度圆环几何参数：半径 R = 48，圆周长 C = 2 * PI * 48 ≈ 301.59
+  const CIRCUMFERENCE = 301.59;
+  const strokeDashoffset = CIRCUMFERENCE * (1 - progressRatio);
 
   // 操作响应
   const handleTogglePause = async (e: React.MouseEvent) => {
@@ -114,7 +119,7 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
   return (
     <Card
       className={cn(
-        "flex flex-col justify-between h-[180px] p-5 border-border bg-card shadow-sm transition-all select-none relative overflow-hidden",
+        "flex items-center h-[180px] p-5 border-border bg-card shadow-sm transition-all select-none relative overflow-hidden",
         isReminding
           ? "border-destructive/60 bg-destructive/5 hover:border-destructive animate-pulse"
           : isPaused
@@ -124,83 +129,42 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
           : "hover:border-primary/50"
       )}
     >
-      {/* 1. 顶部：保留标志性家族 ICON 与右上角随行挂件外跳按钮（去除文字） */}
-      <div className="flex items-center justify-between w-full z-10">
-        <div
-          className={cn(
-            "size-8 rounded-lg flex items-center justify-center transition-colors",
-            isReminding
-              ? "bg-destructive/15 text-destructive border border-destructive/25"
-              : isOffDuty
-              ? "bg-state-offduty/15 text-state-offduty border border-state-offduty/25"
-              : isAway
-              ? "bg-state-away/15 text-state-away border border-state-away/25"
-              : isPaused
-              ? "bg-amber-500/15 text-amber-500 border border-amber-500/25"
-              : "bg-primary/15 text-primary border border-primary/25"
-          )}
-        >
-          {isReminding ? (
-            <BellRing className="size-4.5 animate-bounce" />
-          ) : isOffDuty ? (
-            <Moon className="size-4.5" />
-          ) : (
-            <Timer className="size-4.5" />
-          )}
-        </div>
-
-        <Button
-          size="icon"
-          variant="ghost"
-          onClick={handleOpenWidget}
-          className="size-7 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted"
-          title="置顶唤起桌面独立迷你挂件"
-        >
-          <ExternalLink className="size-4 text-muted-foreground" />
-        </Button>
-      </div>
-
-      {/* 2. 主体核心：chart-radial-stacked 双色堆叠半圆拱门 */}
-      <CardContent className="p-0 flex-1 flex flex-col items-center justify-center relative min-h-0 pt-0.5">
-        <div className="relative w-full h-[84px] flex items-center justify-center">
-          <svg
-            viewBox="0 0 200 84"
-            className="w-full h-full overflow-visible"
-          >
-            {/* 堆叠后段：剩余时间浅色段 (从专注落点延续至终点 160) */}
-            <path
-              d="M 40 76 A 60 60 0 0 1 160 76"
-              stroke={remainingColor}
-              strokeWidth="11"
-              strokeLinecap="round"
+      <div className="flex items-center justify-between gap-4 w-full h-full">
+        {/* 左侧：360度正圆进度环 + 倒计时时间 + 状态微标 */}
+        <div className="relative size-[124px] flex-shrink-0 flex items-center justify-center">
+          <svg viewBox="0 0 120 120" className="w-full h-full -rotate-90">
+            {/* 底轨圆环 */}
+            <circle
+              cx="60"
+              cy="60"
+              r="48"
+              stroke={trackColor}
+              strokeWidth="10"
               fill="none"
-              strokeDasharray={`${remainingLength} ${ARC_LENGTH}`}
-              strokeDashoffset={-activeLength}
-              style={{
-                transition: "stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1), stroke-dasharray 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
-              }}
             />
-
-            {/* 堆叠前段：已专注高亮深色段 (从起点 40 顺时针延伸) */}
-            <path
-              d="M 40 76 A 60 60 0 0 1 160 76"
+            {/* 动态高亮进度弧（顺时针） */}
+            <circle
+              cx="60"
+              cy="60"
+              r="48"
               stroke={activeColor}
-              strokeWidth="11"
+              strokeWidth="10"
               strokeLinecap="round"
               fill="none"
-              strokeDasharray={`${activeLength} ${ARC_LENGTH}`}
-              strokeDashoffset="0"
+              strokeDasharray={CIRCUMFERENCE}
+              strokeDashoffset={strokeDashoffset}
               style={{
-                transition: "stroke-dasharray 0.6s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.3s ease",
+                transition:
+                  "stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.3s ease",
               }}
             />
           </svg>
 
-          {/* 拱门核心大字数字 */}
-          <div className="absolute inset-x-0 bottom-0 flex flex-col items-center justify-center pointer-events-none select-none">
+          {/* 环心正中内容 */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none">
             <span
               className={cn(
-                "text-3xl font-black font-mono tracking-tight leading-none",
+                "text-2xl font-black font-mono tracking-tight",
                 isReminding
                   ? "text-destructive animate-pulse"
                   : isPaused
@@ -210,75 +174,134 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
                   : "text-foreground"
               )}
             >
-              {progressPercent}%
+              {timeFormatted}
             </span>
+            <div
+              className={cn(
+                "mt-0.5 flex items-center justify-center",
+                isReminding
+                  ? "text-destructive"
+                  : isPaused
+                  ? "text-amber-500"
+                  : "text-primary/70"
+              )}
+            >
+              {isPaused ? (
+                <Play className="size-3 fill-current ml-0.5" />
+              ) : (
+                <Pause className="size-3 fill-current" />
+              )}
+            </div>
           </div>
         </div>
 
-        {/* 3. 圆环正下方：状态指示点 + 暂停/继续 + 重置（整合在同一水平排） */}
-        <div
-          className="flex items-center justify-center gap-2 mt-1.5 z-10"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {isReminding ? (
+        {/* 中间：竖向细分割线 */}
+        <Separator orientation="vertical" className="h-24 bg-border/60 self-center" />
+
+        {/* 右侧：右上角外跳挂件按钮 + 靶心状态胶囊 + 大圆形操作按钮 */}
+        <div className="flex-1 flex flex-col justify-between h-full pl-1 py-0.5 min-w-0">
+          {/* 右上角外跳按钮 */}
+          <div className="flex justify-end">
             <Button
-              size="sm"
-              variant="destructive"
-              onClick={handleAcknowledge}
-              className="h-7 px-3 text-xs flex items-center gap-1.5 shadow-sm font-semibold rounded-full"
+              size="icon"
+              variant="ghost"
+              onClick={handleOpenWidget}
+              className="size-7 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted"
+              title="置顶唤起桌面独立迷你挂件"
             >
-              <Coffee className="size-3.5" />
-              <span>确认休息</span>
+              <ExternalLink className="size-4 text-muted-foreground" />
             </Button>
-          ) : (
-            <>
-              {/* 专注状态指示点：放置在暂停/重置按钮前面 */}
-              <div
-                className="flex items-center justify-center mr-1"
-                title={isPaused ? "已暂停" : isAway ? "物理离座" : isOffDuty ? "免打扰" : "专注中"}
-              >
-                {isPaused ? (
-                  <span className="size-2 rounded-full bg-amber-500" />
-                ) : isAway ? (
-                  <span className="size-2 rounded-full bg-state-away" />
-                ) : isOffDuty ? (
-                  <span className="size-2 rounded-full bg-state-offduty" />
-                ) : (
-                  <span className="relative flex size-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-60" />
-                    <span className="relative inline-flex rounded-full size-2 bg-primary" />
-                  </span>
-                )}
-              </div>
+          </div>
 
-              {/* 暂停 / 继续按钮 */}
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={handleTogglePause}
-                className={cn(
-                  "size-7 rounded-full bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground transition-all",
-                  isPaused && "text-amber-500 bg-amber-500/15 hover:bg-amber-500/25"
-                )}
-                title={isPaused ? "继续专注" : "暂停专注"}
-              >
-                {isPaused ? <Play className="size-3.5 text-primary" /> : <Pause className="size-3.5" />}
-              </Button>
+          {/* 中部：靶心图标 + 状态药丸胶囊 */}
+          <div className="flex items-center gap-2">
+            <div
+              className={cn(
+                "size-7 rounded-full flex items-center justify-center transition-colors",
+                isReminding
+                  ? "text-destructive"
+                  : isPaused
+                  ? "text-amber-500"
+                  : isAway
+                  ? "text-state-away"
+                  : "text-primary"
+              )}
+            >
+              <Target className="size-5" />
+            </div>
+            <div
+              className={cn(
+                "px-2.5 py-0.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-colors",
+                isReminding
+                  ? "bg-destructive/15 text-destructive"
+                  : isPaused
+                  ? "bg-amber-500/15 text-amber-500"
+                  : isAway
+                  ? "bg-state-away/15 text-state-away"
+                  : isOffDuty
+                  ? "bg-state-offduty/15 text-state-offduty"
+                  : "bg-primary/12 text-primary"
+              )}
+            >
+              {isReminding
+                ? "该休息了"
+                : isPaused
+                ? "已暂停"
+                : isAway
+                ? "离座中"
+                : isOffDuty
+                ? "免打扰"
+                : "专注中"}
+            </div>
+          </div>
 
-              {/* 重置当前周期按钮 */}
+          {/* 底部：控制按钮区 */}
+          <div className="flex items-center gap-3">
+            {isReminding ? (
               <Button
-                size="icon"
-                variant="ghost"
-                onClick={handleReset}
-                className="size-7 rounded-full bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground transition-all"
-                title="重置当前周期"
+                size="sm"
+                variant="destructive"
+                onClick={handleAcknowledge}
+                className="h-11 px-4 text-xs flex items-center gap-2 shadow-md font-semibold rounded-full w-full justify-center"
               >
-                <RotateCcw className="size-3.5" />
+                <Coffee className="size-4" />
+                <span>确认休息</span>
               </Button>
-            </>
-          )}
+            ) : (
+              <>
+                {/* 主操作按钮：大圆高饱和度按钮 */}
+                <button
+                  type="button"
+                  onClick={handleTogglePause}
+                  className={cn(
+                    "size-11 rounded-full flex items-center justify-center text-primary-foreground shadow-md transition-all hover:scale-105 active:scale-95 cursor-pointer",
+                    isPaused
+                      ? "bg-amber-500 hover:bg-amber-600 shadow-amber-500/25"
+                      : "bg-primary hover:bg-primary/90 shadow-primary/25"
+                  )}
+                  title={isPaused ? "继续专注" : "暂停专注"}
+                >
+                  {isPaused ? (
+                    <Play className="size-4.5 fill-current ml-0.5" />
+                  ) : (
+                    <Pause className="size-4.5 fill-current" />
+                  )}
+                </button>
+
+                {/* 次级操作按钮：大圆柔和重置按钮 */}
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="size-11 rounded-full bg-muted/70 hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                  title="重置当前周期"
+                >
+                  <RotateCcw className="size-4.5" />
+                </button>
+              </>
+            )}
+          </div>
         </div>
-      </CardContent>
+      </div>
     </Card>
   );
 };
