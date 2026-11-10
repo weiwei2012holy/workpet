@@ -1,7 +1,7 @@
 /**
  * @Author wei
  * @Date 2026-11-10
- * @Description 仪表盘指标小组件：专注时钟（左右分栏方案：左侧 360 度圆环倒计时 + 右侧居中靶心状态与双大圆形按钮，支持双击卡片打开挂件）
+ * @Description 仪表盘指标小组件：专注时钟（左右分栏方案：左侧 360 度圆环倒计时 + 右侧呼吸状态胶囊与双大圆形按钮，支持双击卡片打开挂件）
  **/
 
 import React, { useState, useEffect } from "react";
@@ -13,7 +13,6 @@ import {
   Pause,
   RotateCcw,
   Coffee,
-  Target,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import * as ActivityService from "@/../bindings/workpet/pkg/tools/activity/service";
@@ -200,37 +199,44 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
         {/* 中间：竖向细分割线 */}
         <Separator orientation="vertical" className="h-20 bg-border/60 self-center" />
 
-        {/* 右侧：靶心状态胶囊 + 大圆形操作按钮（居中对齐，严丝合缝） */}
+        {/* 右侧：状态呼吸胶囊 + 大圆形操作按钮（居中对齐，严丝合缝） */}
         <div className="flex-1 flex flex-col items-center justify-center h-full min-w-0">
           <div className="flex flex-col items-center justify-center gap-3.5">
-            {/* 状态展示：靶心图标 + 状态药丸胶囊 */}
-            <div className="flex items-center gap-2">
-              <Target
-                className={cn(
-                  "size-5 transition-colors",
-                  isReminding
-                    ? "text-destructive"
-                    : isPaused
-                    ? "text-amber-500"
-                    : isAway
-                    ? "text-state-away"
-                    : "text-primary"
-                )}
-              />
-              <span
-                className={cn(
-                  "px-3 py-0.5 rounded-full text-xs font-semibold tracking-wide transition-colors",
-                  isReminding
-                    ? "bg-destructive/15 text-destructive border border-destructive/25"
-                    : isPaused
-                    ? "bg-amber-500/15 text-amber-500 border border-amber-500/25"
-                    : isAway
-                    ? "bg-state-away/15 text-state-away border border-state-away/25"
-                    : isOffDuty
-                    ? "bg-state-offduty/15 text-state-offduty border border-state-offduty/25"
-                    : "bg-primary/15 text-primary border border-primary/25"
-                )}
-              >
+            {/* 状态展示：内嵌呼吸微动效小圆点的状态胶囊 */}
+            <div
+              className={cn(
+                "px-3 py-1 rounded-full text-xs font-semibold tracking-wide flex items-center gap-2 transition-colors",
+                isReminding
+                  ? "bg-destructive/15 text-destructive border border-destructive/25"
+                  : isPaused
+                  ? "bg-amber-500/15 text-amber-500 border border-amber-500/25"
+                  : isAway
+                  ? "bg-state-away/15 text-state-away border border-state-away/25"
+                  : isOffDuty
+                  ? "bg-state-offduty/15 text-state-offduty border border-state-offduty/25"
+                  : "bg-primary/15 text-primary border border-primary/25"
+              )}
+            >
+              {/* 状态指示点：带柔和呼吸动画 */}
+              {isPaused ? (
+                <span className="size-2 rounded-full bg-amber-500" />
+              ) : isAway ? (
+                <span className="size-2 rounded-full bg-state-away" />
+              ) : isOffDuty ? (
+                <span className="size-2 rounded-full bg-state-offduty" />
+              ) : isReminding ? (
+                <span className="relative flex size-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75" />
+                  <span className="relative inline-flex rounded-full size-2 bg-destructive" />
+                </span>
+              ) : (
+                <span className="relative flex size-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                  <span className="relative inline-flex rounded-full size-2 bg-primary" />
+                </span>
+              )}
+
+              <span>
                 {isReminding
                   ? "该休息了"
                   : isPaused
