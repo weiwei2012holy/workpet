@@ -1,27 +1,17 @@
 /**
  * @Author wei
  * @Date 2026-11-10
- * @Description 仪表盘指标小组件：专注时钟，100% 严格遵循全局三段式卡片规范与 RGB 色彩体系，落地 chart-radial-stacked 双色半圆拱门
+ * @Description 仪表盘指标小组件：专注时钟极简大圆环，彻底去除标题文字，放大半圆，左下角微型状态点，操作按钮置于圆环下方
  **/
 
 import React, { useState, useEffect } from "react";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
-  Timer,
   Play,
   Pause,
   RotateCcw,
   Coffee,
-  BellRing,
-  Moon,
   ExternalLink,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -55,11 +45,11 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
   const isAway = !!state.isAway && !isOffDuty;
   const isPaused = !!state.isPaused && !isReminding;
 
-  // 100% 严格配套全局 index.css 与 tailwind.config.js 的 RGB 通道色彩规范（杜绝非法 hsl 导致透明）
+  // 严格配套 RGB 通道色彩语法
   const activeColor = isReminding
     ? "rgb(var(--destructive))"
     : isPaused
-    ? "rgb(245 158 11)" // 琥珀橙
+    ? "rgb(245 158 11)"
     : isAway
     ? "rgb(var(--state-away))"
     : "rgb(var(--primary))";
@@ -70,8 +60,8 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
     ? "rgb(245 158 11 / 0.18)"
     : "rgb(var(--primary) / 0.16)";
 
-  // 半圆几何计算：半径 R = 54，半圆周长 L = PI * 54 = 169.65
-  const ARC_LENGTH = 169.65;
+  // 放大半圆几何参数：半径 R = 68，全半圆周长 L = PI * 68 = 213.63
+  const ARC_LENGTH = 213.63;
   const activeLength = Math.max(0.1, ARC_LENGTH * progressRatio);
   const remainingLength = Math.max(0.1, ARC_LENGTH * (1 - progressRatio));
 
@@ -121,7 +111,7 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
   return (
     <Card
       className={cn(
-        "flex flex-col justify-between h-[180px] p-5 border-border bg-card shadow-sm transition-all select-none",
+        "flex flex-col justify-between h-[180px] p-5 border-border bg-card shadow-sm transition-all select-none relative overflow-hidden",
         isReminding
           ? "border-destructive/60 bg-destructive/5 hover:border-destructive animate-pulse"
           : isPaused
@@ -131,69 +121,29 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
           : "hover:border-primary/50"
       )}
     >
-      {/* 1. 规范头部：与时间转换、全天走势 100% 像素级对齐一致 */}
-      <CardHeader className="p-0 flex flex-row items-center justify-between space-y-0">
-        <div className="flex items-center gap-2.5">
-          <div
-            className={cn(
-              "size-8 rounded-lg flex items-center justify-center transition-colors",
-              isReminding
-                ? "bg-destructive/15 text-destructive border border-destructive/25"
-                : isOffDuty
-                ? "bg-state-offduty/15 text-state-offduty border border-state-offduty/25"
-                : isAway
-                ? "bg-state-away/15 text-state-away border border-state-away/25"
-                : isPaused
-                ? "bg-amber-500/15 text-amber-500 border border-amber-500/25"
-                : "bg-primary/15 text-primary border border-primary/25"
-            )}
-          >
-            {isReminding ? (
-              <BellRing className="size-4.5 animate-bounce" />
-            ) : isOffDuty ? (
-              <Moon className="size-4.5" />
-            ) : (
-              <Timer className="size-4.5" />
-            )}
-          </div>
-          <CardTitle className="text-base font-semibold text-foreground">
-            专注时钟
-          </CardTitle>
-        </div>
+      {/* 右上角：轻量随行挂件外跳按钮（不破坏主体大圆环） */}
+      <Button
+        size="icon"
+        variant="ghost"
+        onClick={handleOpenWidget}
+        className="absolute top-3 right-3 size-7 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted z-20"
+        title="置顶唤起桌面独立迷你挂件"
+      >
+        <ExternalLink className="size-3.5 text-muted-foreground" />
+      </Button>
 
-        {/* 右侧：状态 Badge 与随行挂件外跳按钮 */}
-        <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-          <Badge
-            variant="outline"
-            className="text-xs font-mono px-2.5 py-0.5 bg-secondary text-secondary-foreground border-border"
-          >
-            {intervalMins}m
-          </Badge>
-
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={handleOpenWidget}
-            className="size-7 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted"
-            title="唤起桌面独立随行挂件"
-          >
-            <ExternalLink className="size-4 text-muted-foreground" />
-          </Button>
-        </div>
-      </CardHeader>
-
-      {/* 2. 主体区：chart-radial-stacked 双色堆叠半圆拱门仪表盘 */}
-      <CardContent className="p-0 my-auto py-0 flex flex-col items-center justify-center relative min-h-0">
-        <div className="relative w-full h-[84px] flex items-center justify-center">
+      {/* 主体核心：放大版 chart-radial-stacked 双色堆叠半圆拱门 */}
+      <CardContent className="p-0 flex-1 flex flex-col items-center justify-center relative min-h-0 pt-1">
+        <div className="relative w-full h-[98px] flex items-center justify-center">
           <svg
-            viewBox="0 0 200 84"
+            viewBox="0 0 200 94"
             className="w-full h-full overflow-visible"
           >
-            {/* 堆叠后段：剩余时间柔和浅色段 (从专注落点延续至终点 154) */}
+            {/* 堆叠后段：剩余时间浅色段 (从专注落点延续至终点 168) */}
             <path
-              d="M 46 76 A 54 54 0 0 1 154 76"
+              d="M 32 84 A 68 68 0 0 1 168 84"
               stroke={remainingColor}
-              strokeWidth="11"
+              strokeWidth="12"
               strokeLinecap="round"
               fill="none"
               strokeDasharray={`${remainingLength} ${ARC_LENGTH}`}
@@ -203,11 +153,11 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
               }}
             />
 
-            {/* 堆叠前段：已专注高亮深色段 (从起点 46 顺时针延伸) */}
+            {/* 堆叠前段：已专注高亮深色段 (从起点 32 顺时针延伸) */}
             <path
-              d="M 46 76 A 54 54 0 0 1 154 76"
+              d="M 32 84 A 68 68 0 0 1 168 84"
               stroke={activeColor}
-              strokeWidth="11"
+              strokeWidth="12"
               strokeLinecap="round"
               fill="none"
               strokeDasharray={`${activeLength} ${ARC_LENGTH}`}
@@ -218,11 +168,11 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
             />
           </svg>
 
-          {/* 拱心核心大字数字 */}
+          {/* 拱门核心大字数字 */}
           <div className="absolute inset-x-0 bottom-0.5 flex flex-col items-center justify-center pointer-events-none select-none">
             <span
               className={cn(
-                "text-2xl font-black font-mono tracking-tight leading-none",
+                "text-3xl font-black font-mono tracking-tight leading-none",
                 isReminding
                   ? "text-destructive animate-pulse"
                   : isPaused
@@ -236,50 +186,20 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
             </span>
           </div>
         </div>
-      </CardContent>
 
-      {/* 3. 规范底部：左侧实时状态指示 + 右侧快捷操作按钮（与其他卡片底部完全水平齐平） */}
-      <CardFooter className="p-0 border-none mt-0 flex items-center justify-between text-xs text-muted-foreground select-none">
-        {/* 左侧：微型状态指示灯（对齐时间转换与全天走势的实时指示点） */}
-        <div className="flex items-center gap-1.5 font-mono text-[11px]">
-          {isReminding ? (
-            <span className="flex items-center gap-1.5 text-destructive font-semibold">
-              <span className="size-1.5 rounded-full bg-destructive animate-ping" />
-              <span>建议休息</span>
-            </span>
-          ) : isPaused ? (
-            <span className="flex items-center gap-1.5 text-amber-500">
-              <span className="size-1.5 rounded-full bg-amber-500" />
-              <span>已暂停</span>
-            </span>
-          ) : isAway ? (
-            <span className="flex items-center gap-1.5 text-state-away">
-              <span className="size-1.5 rounded-full bg-state-away" />
-              <span>物理离座</span>
-            </span>
-          ) : isOffDuty ? (
-            <span className="flex items-center gap-1.5 text-state-offduty">
-              <span className="size-1.5 rounded-full bg-state-offduty" />
-              <span>免打扰</span>
-            </span>
-          ) : (
-            <span className="flex items-center gap-1.5 text-primary">
-              <span className="size-1.5 rounded-full bg-primary animate-pulse" />
-              <span>专注中</span>
-            </span>
-          )}
-        </div>
-
-        {/* 右侧：操作按钮（暂停/继续、重置） */}
-        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+        {/* 核心改动：把暂停/重置快捷控制移至圆环正下方 */}
+        <div
+          className="flex items-center justify-center gap-2 mt-2 z-10"
+          onClick={(e) => e.stopPropagation()}
+        >
           {isReminding ? (
             <Button
               size="sm"
               variant="destructive"
               onClick={handleAcknowledge}
-              className="h-6 px-2.5 text-[11px] flex items-center gap-1 shadow-sm font-semibold rounded-md"
+              className="h-7 px-3 text-xs flex items-center gap-1.5 shadow-sm font-semibold rounded-full"
             >
-              <Coffee className="size-3" />
+              <Coffee className="size-3.5" />
               <span>确认休息</span>
             </Button>
           ) : (
@@ -289,27 +209,51 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
                 variant="ghost"
                 onClick={handleTogglePause}
                 className={cn(
-                  "size-6 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors",
+                  "size-7 rounded-full bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground transition-all",
                   isPaused && "text-amber-500 bg-amber-500/15 hover:bg-amber-500/25"
                 )}
                 title={isPaused ? "继续专注" : "暂停专注"}
               >
-                {isPaused ? <Play className="size-3 text-primary" /> : <Pause className="size-3" />}
+                {isPaused ? <Play className="size-3.5 text-primary" /> : <Pause className="size-3.5" />}
               </Button>
 
               <Button
                 size="icon"
                 variant="ghost"
                 onClick={handleReset}
-                className="size-6 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                className="size-7 rounded-full bg-muted/40 hover:bg-muted text-muted-foreground hover:text-foreground transition-all"
                 title="重置当前周期"
               >
-                <RotateCcw className="size-3" />
+                <RotateCcw className="size-3.5" />
               </Button>
             </>
           )}
         </div>
-      </CardFooter>
+      </CardContent>
+
+      {/* 左下角极简状态指示点：无任何文字说明，仅保留灵动的小呼吸灯 */}
+      <div
+        className="absolute bottom-3.5 left-4 z-10 pointer-events-none"
+        title={isReminding ? "建议休息" : isPaused ? "已暂停" : isAway ? "物理离座" : isOffDuty ? "免打扰" : "专注中"}
+      >
+        {isReminding ? (
+          <span className="relative flex size-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75" />
+            <span className="relative inline-flex rounded-full size-2 bg-destructive" />
+          </span>
+        ) : isPaused ? (
+          <span className="inline-flex size-2 rounded-full bg-amber-500" />
+        ) : isAway ? (
+          <span className="inline-flex size-2 rounded-full bg-state-away" />
+        ) : isOffDuty ? (
+          <span className="inline-flex size-2 rounded-full bg-state-offduty" />
+        ) : (
+          <span className="relative flex size-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-60" />
+            <span className="relative inline-flex rounded-full size-2 bg-primary" />
+          </span>
+        )}
+      </div>
     </Card>
   );
 };
