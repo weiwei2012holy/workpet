@@ -1,26 +1,18 @@
 /**
  * @Author wei
  * @Date 2026-11-10
- * @Description 仪表盘指标小组件：专注时钟半圆仪表盘（Radial Semi-Circle Gauge），规范内边距与大圆环，彻底去除琐碎计数器与冗余文字
+ * @Description 仪表盘指标小组件：专注时钟 chart-radial-stacked 双色堆叠半圆仪表盘，彻底移除标题文字，操作按钮沉底居中
  **/
 
 import React, { useState, useEffect } from "react";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Timer,
   Play,
   Pause,
   RotateCcw,
   Coffee,
-  BellRing,
-  Moon,
   ExternalLink,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -54,8 +46,8 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
   const isAway = !!state.isAway && !isOffDuty;
   const isPaused = !!state.isPaused && !isReminding;
 
-  // 弧线状态颜色
-  const strokeColor = isReminding
+  // 双色堆叠颜色配置（已专注深色段 vs 剩余浅色段）
+  const activeColor = isReminding
     ? "hsl(var(--destructive))"
     : isPaused
     ? "hsl(38 92% 50%)"
@@ -63,9 +55,16 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
     ? "hsl(var(--state-away))"
     : "hsl(var(--primary))";
 
-  // 半圆几何常数：半径 64，半圆周长 201.06
+  const remainingColor = isReminding
+    ? "hsl(var(--destructive) / 0.25)"
+    : isPaused
+    ? "hsl(38 92% 50% / 0.25)"
+    : "hsl(var(--primary) / 0.22)";
+
+  // 半圆周长 (半径 R = 64)
   const ARC_LENGTH = 201.06;
-  const strokeDashoffset = ARC_LENGTH * (1 - progressRatio);
+  const activeLength = Math.max(0.1, ARC_LENGTH * progressRatio);
+  const remainingLength = Math.max(0.1, ARC_LENGTH * (1 - progressRatio));
 
   // 操作响应
   const handleTogglePause = async (e: React.MouseEvent) => {
@@ -113,7 +112,7 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
   return (
     <Card
       className={cn(
-        "flex flex-col justify-between h-[180px] p-5 border-border bg-card shadow-sm transition-all select-none",
+        "flex flex-col justify-between h-[180px] p-5 border-border bg-card shadow-sm transition-all select-none relative overflow-hidden",
         isReminding
           ? "border-destructive/60 bg-destructive/5 hover:border-destructive animate-pulse"
           : isPaused
@@ -123,158 +122,132 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
           : "hover:border-primary/50"
       )}
     >
-      {/* 头部：与全天走势/时间转换严格平齐统一的 Header 与内边距规范 */}
-      <CardHeader className="p-0 flex flex-row items-center justify-between space-y-0">
-        <div className="flex items-center gap-2.5">
-          <div
-            className={cn(
-              "size-8 rounded-lg flex items-center justify-center transition-colors",
-              isReminding
-                ? "bg-destructive/15 text-destructive border border-destructive/30"
-                : isOffDuty
-                ? "bg-state-offduty/15 text-state-offduty border border-state-offduty/25"
-                : isAway
-                ? "bg-state-away/15 text-state-away border border-state-away/25"
-                : isPaused
-                ? "bg-amber-500/15 text-amber-500 border border-amber-500/25"
-                : "bg-primary/15 text-primary border border-primary/25"
-            )}
-          >
-            {isReminding ? (
-              <BellRing className="size-4.5 animate-bounce" />
-            ) : isOffDuty ? (
-              <Moon className="size-4.5" />
-            ) : (
-              <Timer className="size-4.5" />
-            )}
-          </div>
-          <CardTitle className="text-base font-semibold text-foreground">
-            专注时钟
-          </CardTitle>
-        </div>
-
-        {/* 右侧：精简控制按钮与状态微标 */}
-        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-          <Badge
-            variant="secondary"
-            className="text-xs font-mono px-2 py-0.5 border border-border bg-secondary text-secondary-foreground"
-          >
-            {intervalMins}m
-          </Badge>
-
-          {/* 快捷操作微按钮 */}
-          {!isReminding && (
-            <>
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={handleTogglePause}
-                className="size-7 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground"
-                title={isPaused ? "继续专注" : "暂停专注"}
-              >
-                {isPaused ? <Play className="size-3.5 text-primary" /> : <Pause className="size-3.5" />}
-              </Button>
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={handleReset}
-                className="size-7 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground"
-                title="重置当前周期"
-              >
-                <RotateCcw className="size-3.5" />
-              </Button>
-            </>
-          )}
-
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={handleOpenWidget}
-            className="size-7 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground"
-            title="唤起桌面独立迷你随行挂件"
-          >
-            <ExternalLink className="size-3.5 text-primary" />
-          </Button>
-        </div>
-      </CardHeader>
-
-      {/* 主体核心：超大半圆拱形仪表盘 (Semi-Circle Gauge) */}
-      <CardContent className="p-0 flex-1 flex flex-col items-center justify-center relative min-h-0 pt-1">
-        <div className="relative w-full h-[100px] flex items-center justify-center">
+      {/* 核心主视觉：chart-radial-stacked 双色堆叠半圆拱门仪表盘 */}
+      <CardContent className="p-0 flex-1 flex flex-col items-center justify-center relative min-h-0 pt-0.5">
+        <div className="relative w-full h-[96px] flex items-center justify-center">
           <svg
-            viewBox="0 0 200 102"
+            viewBox="0 0 200 98"
             className="w-full h-full overflow-visible"
           >
-            {/* 1. 背景静音轨道（完整上半圆拱门） */}
+            {/* 1. 双色堆叠后段：剩余时间浅色段 (从进度落点延伸至右侧终点 164) */}
             <path
-              d="M 36 90 A 64 64 0 0 1 164 90"
-              stroke="hsl(var(--muted))"
+              d="M 36 88 A 64 64 0 0 1 164 88"
+              stroke={remainingColor}
               strokeWidth="12"
               strokeLinecap="round"
               fill="none"
-              className="opacity-60"
+              strokeDasharray={`${remainingLength} ${ARC_LENGTH}`}
+              strokeDashoffset={-activeLength}
+              style={{
+                transition: "stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1), stroke-dasharray 0.6s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.3s ease",
+              }}
             />
 
-            {/* 2. 前景彩色动态进度弧（平滑生长） */}
+            {/* 2. 双色堆叠前段：已专注高亮深色段 (从左侧起点 36 顺时针延伸) */}
             <path
-              d="M 36 90 A 64 64 0 0 1 164 90"
-              stroke={strokeColor}
+              d="M 36 88 A 64 64 0 0 1 164 88"
+              stroke={activeColor}
               strokeWidth="12"
               strokeLinecap="round"
               fill="none"
-              strokeDasharray={ARC_LENGTH}
-              strokeDashoffset={strokeDashoffset}
+              strokeDasharray={`${activeLength} ${ARC_LENGTH}`}
+              strokeDashoffset="0"
               style={{
-                transition: "stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.3s ease",
+                transition: "stroke-dasharray 0.6s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.3s ease",
               }}
             />
           </svg>
 
-          {/* 拱心核心指标：大字与纯净标签 */}
-          <div className="absolute inset-x-0 bottom-0.5 flex flex-col items-center justify-center pointer-events-none select-none">
-            {isReminding ? (
-              <div className="flex flex-col items-center gap-1.5 pointer-events-auto">
-                <span className="text-xl font-black text-destructive animate-pulse leading-none">
-                  该休息了
-                </span>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  onClick={handleAcknowledge}
-                  className="h-6 px-3 text-xs flex items-center gap-1 shadow-sm font-semibold rounded-full"
-                >
-                  <Coffee className="size-3" />
-                  <span>确认休息</span>
-                </Button>
-              </div>
-            ) : (
-              <>
-                <span
-                  className={cn(
-                    "text-3xl font-black font-mono tracking-tight leading-none",
-                    isPaused
-                      ? "text-amber-500"
-                      : isAway
-                      ? "text-state-away"
-                      : "text-foreground"
-                  )}
-                >
-                  {progressPercent}%
-                </span>
-                <span className="text-xs text-muted-foreground font-medium mt-1 leading-none">
-                  {isPaused
-                    ? "已暂停"
-                    : isAway
-                    ? "物理离座中"
-                    : isOffDuty
-                    ? "午休/下班"
-                    : "已专注"}
-                </span>
-              </>
-            )}
+          {/* 拱门核心指标：大字与纯净标签 */}
+          <div className="absolute inset-x-0 bottom-0 flex flex-col items-center justify-center pointer-events-none select-none">
+            <span
+              className={cn(
+                "text-3xl font-black font-mono tracking-tight leading-none",
+                isReminding
+                  ? "text-destructive animate-pulse"
+                  : isPaused
+                  ? "text-amber-500"
+                  : isAway
+                  ? "text-state-away"
+                  : "text-foreground"
+              )}
+            >
+              {progressPercent}%
+            </span>
+            <span className="text-[11px] text-muted-foreground font-medium mt-1 leading-none">
+              {isReminding
+                ? "该休息了"
+                : isPaused
+                ? "已暂停"
+                : isAway
+                ? "离座中"
+                : isOffDuty
+                ? "午休/下班"
+                : "已专注"}
+            </span>
           </div>
         </div>
       </CardContent>
+
+      {/* 底部居中操作区：纯粹轻量的小控制栏 */}
+      <div
+        className="flex items-center justify-center gap-1.5 pt-2 border-t border-border/40"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {isReminding ? (
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={handleAcknowledge}
+            className="h-6.5 px-3 text-xs flex items-center gap-1.5 shadow-sm font-semibold rounded-full"
+          >
+            <Coffee className="size-3" />
+            <span>确认休息</span>
+          </Button>
+        ) : (
+          <>
+            <Badge
+              variant="secondary"
+              className="text-[11px] font-mono px-2 py-0.5 border border-border/60 bg-muted/60 text-muted-foreground"
+            >
+              {intervalMins}m
+            </Badge>
+
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={handleTogglePause}
+              className={cn(
+                "size-6.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors",
+                isPaused && "text-amber-500 bg-amber-500/15 hover:bg-amber-500/25"
+              )}
+              title={isPaused ? "继续专注" : "暂停专注"}
+            >
+              {isPaused ? <Play className="size-3 text-primary" /> : <Pause className="size-3" />}
+            </Button>
+
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={handleReset}
+              className="size-6.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              title="重置当前周期"
+            >
+              <RotateCcw className="size-3" />
+            </Button>
+
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={handleOpenWidget}
+              className="size-6.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              title="唤起桌面独立迷你随行挂件"
+            >
+              <ExternalLink className="size-3 text-primary" />
+            </Button>
+          </>
+        )}
+      </div>
     </Card>
   );
 };
