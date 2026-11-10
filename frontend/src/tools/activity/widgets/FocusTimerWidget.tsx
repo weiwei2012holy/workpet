@@ -1,7 +1,7 @@
 /**
  * @Author wei
  * @Date 2026-11-10
- * @Description 仪表盘指标小组件：专注时钟（左右分栏方案：左侧 360 度圆环倒计时 + 右侧靶心状态与大圆形主控按钮）
+ * @Description 仪表盘指标小组件：专注时钟（左右分栏方案：左侧 360 度圆环倒计时 + 右侧居中靶心状态与双大圆形按钮，支持双击卡片打开挂件）
  **/
 
 import React, { useState, useEffect } from "react";
@@ -13,7 +13,6 @@ import {
   Pause,
   RotateCcw,
   Coffee,
-  ExternalLink,
   Target,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -107,6 +106,7 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
     }
   };
 
+  // 双击卡片快速打开独立挂件
   const handleOpenWidget = async (e: React.MouseEvent) => {
     e.stopPropagation();
     try {
@@ -118,8 +118,10 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
 
   return (
     <Card
+      onDoubleClick={handleOpenWidget}
+      title="双击打开桌面独立迷你挂件"
       className={cn(
-        "flex items-center h-[180px] p-5 border-border bg-card shadow-sm transition-all select-none relative overflow-hidden",
+        "flex items-center h-[180px] p-5 border-border bg-card shadow-sm transition-all select-none relative overflow-hidden cursor-default",
         isReminding
           ? "border-destructive/60 bg-destructive/5 hover:border-destructive animate-pulse"
           : isPaused
@@ -196,109 +198,96 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
         </div>
 
         {/* 中间：竖向细分割线 */}
-        <Separator orientation="vertical" className="h-24 bg-border/60 self-center" />
+        <Separator orientation="vertical" className="h-20 bg-border/60 self-center" />
 
-        {/* 右侧：右上角外跳挂件按钮 + 靶心状态胶囊 + 大圆形操作按钮 */}
-        <div className="flex-1 flex flex-col justify-between h-full pl-1 py-0.5 min-w-0">
-          {/* 右上角外跳按钮 */}
-          <div className="flex justify-end">
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={handleOpenWidget}
-              className="size-7 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted"
-              title="置顶唤起桌面独立迷你挂件"
-            >
-              <ExternalLink className="size-4 text-muted-foreground" />
-            </Button>
-          </div>
-
-          {/* 中部：靶心图标 + 状态药丸胶囊 */}
-          <div className="flex items-center gap-2">
-            <div
-              className={cn(
-                "size-7 rounded-full flex items-center justify-center transition-colors",
-                isReminding
-                  ? "text-destructive"
-                  : isPaused
-                  ? "text-amber-500"
-                  : isAway
-                  ? "text-state-away"
-                  : "text-primary"
-              )}
-            >
-              <Target className="size-5" />
-            </div>
-            <div
-              className={cn(
-                "px-2.5 py-0.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-colors",
-                isReminding
-                  ? "bg-destructive/15 text-destructive"
-                  : isPaused
-                  ? "bg-amber-500/15 text-amber-500"
-                  : isAway
-                  ? "bg-state-away/15 text-state-away"
-                  : isOffDuty
-                  ? "bg-state-offduty/15 text-state-offduty"
-                  : "bg-primary/12 text-primary"
-              )}
-            >
-              {isReminding
-                ? "该休息了"
-                : isPaused
-                ? "已暂停"
-                : isAway
-                ? "离座中"
-                : isOffDuty
-                ? "免打扰"
-                : "专注中"}
-            </div>
-          </div>
-
-          {/* 底部：控制按钮区 */}
-          <div className="flex items-center gap-3">
-            {isReminding ? (
-              <Button
-                size="sm"
-                variant="destructive"
-                onClick={handleAcknowledge}
-                className="h-11 px-4 text-xs flex items-center gap-2 shadow-md font-semibold rounded-full w-full justify-center"
+        {/* 右侧：靶心状态胶囊 + 大圆形操作按钮（居中对齐，严丝合缝） */}
+        <div className="flex-1 flex flex-col items-center justify-center h-full min-w-0">
+          <div className="flex flex-col items-center justify-center gap-3.5">
+            {/* 状态展示：靶心图标 + 状态药丸胶囊 */}
+            <div className="flex items-center gap-2">
+              <Target
+                className={cn(
+                  "size-5 transition-colors",
+                  isReminding
+                    ? "text-destructive"
+                    : isPaused
+                    ? "text-amber-500"
+                    : isAway
+                    ? "text-state-away"
+                    : "text-primary"
+                )}
+              />
+              <span
+                className={cn(
+                  "px-3 py-0.5 rounded-full text-xs font-semibold tracking-wide transition-colors",
+                  isReminding
+                    ? "bg-destructive/15 text-destructive border border-destructive/25"
+                    : isPaused
+                    ? "bg-amber-500/15 text-amber-500 border border-amber-500/25"
+                    : isAway
+                    ? "bg-state-away/15 text-state-away border border-state-away/25"
+                    : isOffDuty
+                    ? "bg-state-offduty/15 text-state-offduty border border-state-offduty/25"
+                    : "bg-primary/15 text-primary border border-primary/25"
+                )}
               >
-                <Coffee className="size-4" />
-                <span>确认休息</span>
-              </Button>
-            ) : (
-              <>
-                {/* 主操作按钮：大圆高饱和度按钮 */}
-                <button
-                  type="button"
-                  onClick={handleTogglePause}
-                  className={cn(
-                    "size-11 rounded-full flex items-center justify-center text-primary-foreground shadow-md transition-all hover:scale-105 active:scale-95 cursor-pointer",
-                    isPaused
-                      ? "bg-amber-500 hover:bg-amber-600 shadow-amber-500/25"
-                      : "bg-primary hover:bg-primary/90 shadow-primary/25"
-                  )}
-                  title={isPaused ? "继续专注" : "暂停专注"}
-                >
-                  {isPaused ? (
-                    <Play className="size-4.5 fill-current ml-0.5" />
-                  ) : (
-                    <Pause className="size-4.5 fill-current" />
-                  )}
-                </button>
+                {isReminding
+                  ? "该休息了"
+                  : isPaused
+                  ? "已暂停"
+                  : isAway
+                  ? "离座中"
+                  : isOffDuty
+                  ? "免打扰"
+                  : "专注中"}
+              </span>
+            </div>
 
-                {/* 次级操作按钮：大圆柔和重置按钮 */}
-                <button
-                  type="button"
-                  onClick={handleReset}
-                  className="size-11 rounded-full bg-muted/70 hover:bg-muted text-muted-foreground hover:text-foreground flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer"
-                  title="重置当前周期"
+            {/* 控制按钮区 */}
+            <div className="flex items-center gap-3.5">
+              {isReminding ? (
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={handleAcknowledge}
+                  className="h-11 px-5 text-xs flex items-center gap-2 shadow-md font-semibold rounded-full justify-center"
                 >
-                  <RotateCcw className="size-4.5" />
-                </button>
-              </>
-            )}
+                  <Coffee className="size-4" />
+                  <span>确认休息</span>
+                </Button>
+              ) : (
+                <>
+                  {/* 主操作按钮：大圆高饱和度按钮 */}
+                  <button
+                    type="button"
+                    onClick={handleTogglePause}
+                    className={cn(
+                      "size-12 rounded-full flex items-center justify-center text-primary-foreground shadow-md transition-all hover:scale-105 active:scale-95 cursor-pointer",
+                      isPaused
+                        ? "bg-amber-500 hover:bg-amber-600 shadow-amber-500/25"
+                        : "bg-primary hover:bg-primary/90 shadow-primary/25"
+                    )}
+                    title={isPaused ? "继续专注" : "暂停专注"}
+                  >
+                    {isPaused ? (
+                      <Play className="size-5 fill-current ml-0.5" />
+                    ) : (
+                      <Pause className="size-5 fill-current" />
+                    )}
+                  </button>
+
+                  {/* 次级操作按钮：大圆柔和淡紫重置按钮 */}
+                  <button
+                    type="button"
+                    onClick={handleReset}
+                    className="size-12 rounded-full bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                    title="重置当前周期"
+                  >
+                    <RotateCcw className="size-5" />
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>
