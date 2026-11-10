@@ -192,6 +192,9 @@ func (s *Service) OpenWidget() {
 		s.floatingWindow.Show()
 		s.floatingWindow.Focus()
 	}
+	if s.app != nil {
+		s.app.Event.Emit("reminder:window-shown", nil)
+	}
 }
 
 // CloseWidget 隐藏随行悬浮挂件

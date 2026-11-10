@@ -134,6 +134,11 @@ func main() {
 		activityService.OnWindowLostFocus()
 	})
 
+	// 挂件窗口展示时向前端广播，触发统一的 N 秒自动关闭生命周期
+	floatWindow.OnWindowEvent(events.Common.WindowShow, func(event *application.WindowEvent) {
+		app.Event.Emit("reminder:window-shown", nil)
+	})
+
 	floatWindow.RegisterHook(events.Common.WindowClosing, func(e *application.WindowEvent) {
 		configMgr.Flush()
 		floatWindow.Hide()

@@ -1,7 +1,7 @@
 /**
  * @Author wei
- * @Date 2026-11-06
- * @Description 随行桌面极简消息通知弹窗，支持午休/下班长时间离座状态感知，采用 React Bits 的 SwipeToast 手势交互弹窗
+ * @Date 2026-11-10
+ * @Description 随行桌面极简消息通知弹窗，打开后 N 秒 (5s) 全场景自动倒计时淡出并收起隐藏，支持鼠标悬停从容操作
  **/
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
@@ -11,6 +11,9 @@ import { Service as ActivityService } from "../../../bindings/workpet/pkg/tools/
 import * as SystemService from "../../../bindings/workpet/pkg/system/service";
 import { ReminderState } from "../../../bindings/workpet/pkg/tools/activity/models";
 import { APP_EVENTS, subscribeEvent } from "@/types/events";
+
+// 挂件全局自动关闭倒计时（毫秒，默认 5 秒自动淡出并隐藏原生窗口）
+const AUTO_CLOSE_MS = 5000;
 
 // 提示音效
 const playAlertSound = () => {
@@ -85,6 +88,9 @@ export default function ActivityWidget() {
 
   // 控制 SwipeToast 的开启与关闭
   const [open, setOpen] = useState<boolean>(true);
+  const [openKey, setOpenKey] = useState<number>(() => Date.now());
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isHoveredRef = useRef<boolean>(false);
   const hasAlertedRef = useRef<boolean>(false);
   const dragStartPos = useRef<{ x: number; y: number } | null>(null);
 
@@ -99,7 +105,20 @@ export default function ActivityWidget() {
     SystemService.OpenDashboard();
   };
 
-  // 唤起与数据刷新自愈
+  // 启动/重置自动关闭定时器 (双重保险机制)
+  const startCloseTimer = useCallback(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    if (!isHoveredRef.current) {
+      timerRef.current = setTimeout(() => {
+        setOpen(false);
+      }, AUTO_CLOSE_MS);
+    }
+  }, []);
+
+  // 唤起与数据刷新自愈（任何场景下打开窗口均重启 N 秒自动关闭生命周期）
   const handleWakeup = useCallback(() => {
     ActivityService.GetState()
       .then((res) => {
@@ -108,12 +127,32 @@ export default function ActivityWidget() {
       .catch(console.error);
 
     setOpen(true);
-  }, []);
+    setOpenKey(Date.now()); // 强制触发 SwipeToast 导火索与动画完全重开
+    startCloseTimer();
+  }, [startCloseTimer]);
 
   // 当弹窗完成退场时调用原生隐藏
   const handleToastClose = (reason: SwipeToastCloseReason) => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
     setOpen(false);
     ActivityService.HideWindow();
+  };
+
+  // 鼠标悬停控制：悬停时暂停倒计时，移出时重置 5 秒倒计时
+  const handleMouseEnter = () => {
+    isHoveredRef.current = true;
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+
+  const handleMouseLeave = () => {
+    isHoveredRef.current = false;
+    startCloseTimer();
   };
 
   // 1. 初始化数据与全生命周期事件监听
@@ -145,7 +184,7 @@ export default function ActivityWidget() {
 
       if (payload.isReminding && !hasAlertedRef.current) {
         hasAlertedRef.current = true;
-        setOpen(true);
+        handleWakeup();
         playAlertSound();
       } else if (!payload.isReminding) {
         hasAlertedRef.current = false;
@@ -155,7 +194,7 @@ export default function ActivityWidget() {
     // 监听离座归位欢迎事件
     const unReturned = subscribeEvent<ReminderState>(APP_EVENTS.REMINDER_RETURNED, (payload) => {
       setState(payload);
-      setOpen(true);
+      handleWakeup();
       playWelcomeBackSound();
     });
 
@@ -181,6 +220,10 @@ export default function ActivityWidget() {
     window.addEventListener("keydown", handleKeyDown);
 
     return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
       if (unShown) unShown();
       if (unTick) unTick();
       if (unReturned) unReturned();
@@ -211,6 +254,7 @@ export default function ActivityWidget() {
     await ActivityService.TogglePause();
     const updated = await ActivityService.GetState();
     if (updated) setState(updated);
+    startCloseTimer();
   };
 
   const handleReset = async (e: React.MouseEvent) => {
@@ -218,6 +262,7 @@ export default function ActivityWidget() {
     await ActivityService.Reset();
     const updated = await ActivityService.GetState();
     if (updated) setState(updated);
+    startCloseTimer();
   };
 
   // 计算展示时间
@@ -242,6 +287,7 @@ export default function ActivityWidget() {
   return (
     <div className="w-full h-full flex items-center justify-center p-0 m-0 select-none bg-transparent overflow-hidden">
       <SwipeToast
+        key={openKey}
         open={open}
         onClose={handleToastClose}
         inline={true}
@@ -251,7 +297,7 @@ export default function ActivityWidget() {
         slideMs={360}
         settleBounce={0.25}
         swipeDistance={38}
-        duration={0} /* 窗口常驻，支持按键或失焦收起 */
+        duration={AUTO_CLOSE_MS} /* 全场景打开 5 秒自动倒计时收起，动态导火索燃烧提示 */
         fuse="bottom"
         fuseColor={fuseColor}
         color="currentColor"
@@ -259,8 +305,10 @@ export default function ActivityWidget() {
         closeButton={false}
         className={state.isReminding ? "is-alerting" : ""}
       >
-        {/* 自定义卡片内容：整卡原生可拖拽，按钮专属防拖拽 */}
+        {/* 自定义卡片内容：整卡原生可拖拽，支持鼠标悬停从容操作 */}
         <div
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
           style={{ "--wails-draggable": "drag" } as React.CSSProperties}
           className="flex items-center justify-between w-full h-full gap-2.5 py-0.5 cursor-grab active:cursor-grabbing"
           title="按住任意区域拖动悬浮窗位置"

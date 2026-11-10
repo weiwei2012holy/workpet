@@ -382,11 +382,15 @@ func (s *Service) ShowWindow() {
 
 	s.mu.RLock()
 	window := s.window
+	app := s.app
 	s.mu.RUnlock()
 
 	if window != nil {
 		window.Show()
 		window.Focus()
+	}
+	if app != nil {
+		app.Event.Emit("reminder:window-shown", nil)
 	}
 }
 
