@@ -1,7 +1,7 @@
 /**
  * @Author wei
- * @Date 2026-11-09
- * @Description 仪表盘指标小组件：实时专注倒计时时钟，支持在指标看板中实时倒计时、专注进度呈现、唤起桌面随行挂件与快捷暂停/重置/确认休息操作
+ * @Date 2026-11-10
+ * @Description 仪表盘指标小组件：实时专注倒计时时钟，基于 shadcn/ui Radial Chart 环形图重构，提供环形进度感知、时间大字展示与快捷操作
  **/
 
 import React, { useState, useEffect } from "react";
@@ -10,11 +10,11 @@ import {
   CardHeader,
   CardTitle,
   CardContent,
-  CardFooter,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
+import { ChartContainer, type ChartConfig } from "@/components/ui/chart";
+import { RadialBarChart, RadialBar, PolarAngleAxis } from "recharts";
 import {
   Timer,
   Play,
@@ -26,6 +26,7 @@ import {
   Sparkles,
   ExternalLink,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import * as ActivityService from "@/../bindings/workpet/pkg/tools/activity/service";
 import * as SystemService from "@/../bindings/workpet/pkg/system/service";
 
@@ -60,6 +61,28 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
   const isOffDuty = !!state.isOffDuty;
   const isAway = !!state.isAway && !isOffDuty;
   const isPaused = !!state.isPaused && !isReminding;
+
+  // shadcn Chart 配置与动态主题色绑定
+  const chartConfig = {
+    progress: {
+      label: "专注进度",
+      color: isReminding
+        ? "hsl(var(--destructive))"
+        : isPaused
+        ? "hsl(38 92% 50%)"
+        : isAway
+        ? "hsl(var(--state-away))"
+        : "hsl(var(--primary))",
+    },
+  } satisfies ChartConfig;
+
+  const chartData = [
+    {
+      name: "focus",
+      value: progressPercent,
+      fill: "var(--color-progress)",
+    },
+  ];
 
   // 操作响应
   const handleTogglePause = async (e: React.MouseEvent) => {
@@ -106,7 +129,8 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
 
   return (
     <Card
-      className={`flex flex-col justify-between h-[180px] p-5 border-border bg-card shadow-sm transition-all select-none ${
+      className={cn(
+        "flex flex-col justify-between h-[180px] p-5 border-border bg-card shadow-sm transition-all select-none",
         isReminding
           ? "border-destructive/60 bg-destructive/5 hover:border-destructive animate-pulse"
           : isPaused
@@ -114,13 +138,14 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
           : isAway
           ? "hover:border-state-away/50"
           : "hover:border-primary/50"
-      }`}
+      )}
     >
       {/* 头部：标题、状态 Badge 与呼出挂件按钮 */}
       <CardHeader className="p-0 flex flex-row items-center justify-between space-y-0">
         <div className="flex items-center gap-2.5">
           <div
-            className={`size-8 rounded-lg flex items-center justify-center transition-colors ${
+            className={cn(
+              "size-8 rounded-lg flex items-center justify-center transition-colors",
               isReminding
                 ? "bg-destructive/15 text-destructive border border-destructive/30"
                 : isOffDuty
@@ -130,7 +155,7 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
                 : isPaused
                 ? "bg-amber-500/15 text-amber-500 border border-amber-500/25"
                 : "bg-primary/15 text-primary border border-primary/25"
-            }`}
+            )}
           >
             {isReminding ? (
               <BellRing className="size-4.5 animate-bounce" />
@@ -184,20 +209,62 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
         </div>
       </CardHeader>
 
-      {/* 核心大字倒计时区 */}
-      <CardContent className="p-0 my-auto py-1">
-        <div className="flex items-baseline justify-between">
-          <div className="flex items-baseline gap-2 font-mono">
+      {/* 主体内容：左侧 Radial Chart 环形进度仪表 + 右侧倒计时数字与快捷操作 */}
+      <CardContent className="flex-1 flex items-center justify-between gap-3 p-0 pt-2 min-h-0">
+        {/* 左侧：shadcn/ui 官方 Radial Chart 环形仪表 */}
+        <div className="relative size-[94px] shrink-0 flex items-center justify-center">
+          <ChartContainer
+            config={chartConfig}
+            className="size-[94px] aspect-square"
+          >
+            <RadialBarChart
+              data={chartData}
+              startAngle={90}
+              endAngle={-270}
+              innerRadius="72%"
+              outerRadius="100%"
+              barSize={7}
+            >
+              <PolarAngleAxis
+                type="number"
+                domain={[0, 100]}
+                angleAxisId={0}
+                tick={false}
+              />
+              <RadialBar
+                dataKey="value"
+                background={{ fill: "hsl(var(--muted)/0.5)" }}
+                cornerRadius={4}
+              />
+            </RadialBarChart>
+          </ChartContainer>
+
+          {/* 环心绝对定位文字 */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none">
+            <span className="text-base font-black font-mono tracking-tight text-foreground leading-none">
+              {progressPercent}%
+            </span>
+            <span className="text-[10px] text-muted-foreground scale-90 mt-1 font-medium leading-none">
+              已专注
+            </span>
+          </div>
+        </div>
+
+        {/* 右侧：倒计时大字时间、状态说明与快捷操作按钮组 */}
+        <div className="flex-1 flex flex-col justify-center min-w-0">
+          {/* 核心大字倒计时区 */}
+          <div className="flex items-baseline gap-1.5 font-mono">
             <span
-              className={`text-3xl font-extrabold tracking-tight ${
+              className={cn(
+                "text-2xl font-black tracking-tight",
                 isReminding
-                  ? "text-destructive"
+                  ? "text-destructive animate-pulse"
                   : isPaused
                   ? "text-amber-500"
                   : isAway
                   ? "text-state-away"
                   : "text-foreground"
-              }`}
+              )}
             >
               {isReminding ? "00:00" : timeFormatted}
             </span>
@@ -206,14 +273,28 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
             </span>
           </div>
 
+          {/* 状态辅助文案 */}
+          <p className="text-xs text-muted-foreground truncate mt-0.5">
+            {isReminding
+              ? "该起立休息了"
+              : isPaused
+              ? "计时已暂停"
+              : isAway
+              ? "物理离座中"
+              : `已专注 ${Math.floor(elapsedSecs / 60)} 分钟`}
+          </p>
+
           {/* 快捷操作按钮组 */}
-          <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="flex items-center gap-1.5 mt-2.5"
+            onClick={(e) => e.stopPropagation()}
+          >
             {isReminding ? (
               <Button
                 size="sm"
                 variant="destructive"
                 onClick={handleAcknowledge}
-                className="h-7 px-2.5 text-xs flex items-center gap-1 shadow-sm font-semibold"
+                className="h-7 px-3 text-xs flex items-center gap-1.5 font-semibold shadow-sm"
                 title="已起立休息，开始下一轮专注"
               >
                 <Coffee className="size-3.5" />
@@ -222,13 +303,26 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
             ) : (
               <>
                 <Button
-                  size="icon"
-                  variant="outline"
+                  size="sm"
+                  variant={isPaused ? "default" : "outline"}
                   onClick={handleTogglePause}
-                  className="size-7 rounded-lg border-border hover:bg-muted text-foreground"
+                  className={cn(
+                    "h-7 px-2.5 text-xs flex items-center gap-1.5 rounded-lg border-border transition-all",
+                    !isPaused && "hover:bg-muted text-foreground"
+                  )}
                   title={isPaused ? "继续倒计时" : "暂停倒计时"}
                 >
-                  {isPaused ? <Play className="size-3.5 text-primary" /> : <Pause className="size-3.5 text-muted-foreground" />}
+                  {isPaused ? (
+                    <>
+                      <Play className="size-3" />
+                      <span>继续</span>
+                    </>
+                  ) : (
+                    <>
+                      <Pause className="size-3" />
+                      <span>暂停</span>
+                    </>
+                  )}
                 </Button>
                 <Button
                   size="icon"
@@ -244,15 +338,6 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
           </div>
         </div>
       </CardContent>
-
-      {/* 底部专注进度条与描述 */}
-      <CardFooter className="p-0 border-none mt-0 flex flex-col gap-1.5">
-        <Progress value={progressPercent} className="h-1.5" />
-        <div className="flex justify-between w-full text-xs font-mono text-muted-foreground">
-          <span>{isPaused ? "计时已暂停" : isAway ? "物理离座中" : `已专注 ${Math.floor(elapsedSecs / 60)} 分钟`}</span>
-          <span>{progressPercent}%</span>
-        </div>
-      </CardFooter>
     </Card>
   );
 };
