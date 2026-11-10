@@ -61,6 +61,7 @@ type Service struct {
 	lastIdleSecs  int
 	syncTickCount int
 	lastTrayLabel string
+	lastStats     ActivityStats
 
 	stopTicker chan struct{}
 }
@@ -192,6 +193,12 @@ func (s *Service) handleSecondTick() {
 	stats := s.aggregator.GetStatsSnapshot(currentStatus)
 	state := s.stateMachine.GetReminderState(stats.RestCount, int(idleSeconds))
 
+	// 脏检查：对比统计指标是否有实质变化，避免每秒无谓跨进程 IPC 广播
+	statsChanged := stats != s.lastStats
+	if statsChanged {
+		s.lastStats = stats
+	}
+
 	tray := s.tray
 	app := s.app
 	window := s.window
@@ -211,7 +218,8 @@ func (s *Service) handleSecondTick() {
 		if widgetVisible || dashVisible || state.IsReminding || event.UserReturned || event.ShowWidget || event.RequestFadeOut {
 			app.Event.Emit("reminder:tick", state)
 		}
-		if dashVisible || shouldSyncStorage || event.UserReturned {
+		// 走势与累计指标仅在统计数据实际变动、离座归位、跨天重置或落盘同步时广播（由每秒 1 次降为仅变动时广播）
+		if dashVisible && (statsChanged || event.UserReturned || isNewDay || shouldSyncStorage) {
 			app.Event.Emit("activity:stats-update", stats)
 		}
 		if event.UserReturned {

@@ -1,7 +1,7 @@
 /**
  * @Author wei
- * @Date 2026-11-09
- * @Description 无边框控制看板主视口（MainDashboard），支持午休/下班长时间离座排除配置联动与工具箱今日数据实时透传，100% 严谨采用 Tweakcn Cosmic Night 官方规范
+ * @Date 2026-11-10
+ * @Description 无边框控制看板主视口（MainDashboard），支持视口可见性休眠与按需数据唤醒，后台零空转
  **/
 
 import React, { useState, useEffect } from "react";
@@ -121,16 +121,36 @@ export const MainDashboard: React.FC = () => {
 
     initData();
 
-    // 2. 监听事件实时更新（强类型订阅契约）
+    // 2. 监听事件实时更新（强类型订阅契约，视口感知节能）
     const unbindStats = subscribeEvent<ActivityStatsPayload>(
       APP_EVENTS.ACTIVITY_STATS_UPDATE,
-      (data) => setStats(data)
+      (data) => {
+        // 切后台时静默，仅在前台可见时更新走势
+        if (document.visibilityState === "visible") {
+          setStats(data);
+        }
+      }
     );
 
     const unbindTick = subscribeEvent<ReminderTickPayload>(
       APP_EVENTS.REMINDER_TICK,
-      (data) => setReminderState(data)
+      (data) => {
+        // 核心节能优化：当看板被遮挡/切后台时跳过秒级时钟跳动的虚拟DOM重绘；告警触发或前台可见时正常响应
+        if (document.visibilityState === "visible" || data.isReminding) {
+          setReminderState(data);
+        }
+      }
     );
+
+    // 视口感知：当看板窗口重新恢复可见或获得焦点时，立即拉取一次最新状态对齐展示
+    const handleForeground = () => {
+      if (document.visibilityState === "visible") {
+        initData();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleForeground);
+    window.addEventListener("focus", handleForeground);
 
     const unbindWidgets = subscribeEvent<DashboardWidgetsPayload>(
       APP_EVENTS.DASHBOARD_WIDGETS_CHANGED,
@@ -158,6 +178,8 @@ export const MainDashboard: React.FC = () => {
       if (unbindTick) unbindTick();
       if (unbindWidgets) unbindWidgets();
       if (unbindTools) unbindTools();
+      document.removeEventListener("visibilitychange", handleForeground);
+      window.removeEventListener("focus", handleForeground);
     };
   }, []);
 

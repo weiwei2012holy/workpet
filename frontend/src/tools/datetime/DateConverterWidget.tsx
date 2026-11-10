@@ -1,7 +1,7 @@
 /**
  * @Author wei
- * @Date 2026-11-06
- * @Description 仪表盘指标小组件：时间转换（双行极简数据，双复制，就地点击原位输入与双向即时转换）
+ * @Date 2026-11-10
+ * @Description 仪表盘指标小组件：时间转换（视口感知休眠与静止指示灯，切后台零开销）
  **/
 
 import React, { useState, useEffect } from "react";
@@ -36,12 +36,45 @@ export const DateConverterWidget: React.FC = () => {
   // 全功能转换工作台弹窗
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
-  // 每秒更新系统实时时钟（未处于自定义转换模式时活跃驱动）
+  // 视口感知定时器：仅在页面处于前台可见时按秒跳动，切后台彻底休眠避免闲置空转
   useEffect(() => {
-    const timer = setInterval(() => {
-      setRealtimeDate(new Date());
-    }, 1000);
-    return () => clearInterval(timer);
+    let timer: ReturnType<typeof setInterval> | null = null;
+
+    const startTimer = () => {
+      if (!timer && document.visibilityState === "visible") {
+        setRealtimeDate(new Date());
+        timer = setInterval(() => {
+          setRealtimeDate(new Date());
+        }, 1000);
+      }
+    };
+
+    const stopTimer = () => {
+      if (timer) {
+        clearInterval(timer);
+        timer = null;
+      }
+    };
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        startTimer();
+      } else {
+        stopTimer();
+      }
+    };
+
+    startTimer();
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("focus", startTimer);
+    window.addEventListener("blur", stopTimer);
+
+    return () => {
+      stopTimer();
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("focus", startTimer);
+      window.removeEventListener("blur", stopTimer);
+    };
   }, []);
 
   // 当前所呈现的目标时刻（优先展示转换后的时刻，无转换时跟随实时时钟）
@@ -256,7 +289,7 @@ export const DateConverterWidget: React.FC = () => {
               className={`size-2 rounded-full inline-block ${
                 customDate !== null
                   ? "bg-primary"
-                  : "bg-emerald-500 animate-pulse"
+                  : "bg-emerald-500"
               }`}
             />
             <span>{customDate !== null ? "自定义" : "实时"}</span>

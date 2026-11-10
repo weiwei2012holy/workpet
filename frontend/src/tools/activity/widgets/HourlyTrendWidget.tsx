@@ -1,7 +1,7 @@
 /**
  * @Author wei
- * @Date 2026-11-07
- * @Description 仪表盘指标小组件：24小时专注走势图，使用 shadcn/ui 官方 Chart (Recharts AreaChart) 渐变平滑走势重构
+ * @Date 2026-11-10
+ * @Description 仪表盘指标小组件：24小时专注走势图，关闭 Recharts 循环补间动画与稳定缓存，消除空转 GPU 渲染开销
  **/
 
 import React, { useMemo } from "react";
@@ -33,7 +33,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export const HourlyTrendWidget: React.FC<HourlyTrendWidgetProps> = ({
+export const HourlyTrendWidget: React.FC<HourlyTrendWidgetProps> = React.memo(({
   hourlyFocus = new Array(24).fill(0),
 }) => {
   const currentHour = new Date().getHours();
@@ -43,6 +43,9 @@ export const HourlyTrendWidget: React.FC<HourlyTrendWidgetProps> = ({
   const maxMinutes = Math.max(...rawData);
   const currentHourMins = rawData[currentHour] || 0;
 
+  // 使用数值序列字符串作为 memo 依赖，确保只有数据数值真正变化时才重新构造图表数据数组
+  const rawDataKey = rawData.join(",");
+
   const chartData = useMemo(() => {
     return rawData.map((minutes, hour) => ({
       hour,
@@ -50,10 +53,11 @@ export const HourlyTrendWidget: React.FC<HourlyTrendWidgetProps> = ({
       displayTime: `${String(hour).padStart(2, "0")}:00`,
       minutes,
     }));
-  }, [rawData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rawDataKey]);
 
   return (
-    <Card className="flex flex-col justify-between h-[180px] p-5 border-border bg-card shadow-sm hover:border-primary/50 transition-all">
+    <Card className="flex flex-col justify-between h-[180px] p-5 border-border bg-card shadow-sm hover:border-primary/50 transition-all select-none">
       {/* 头部：CardHeader 与 CardTitle 复合规范 */}
       <CardHeader className="p-0 flex flex-row items-center justify-between space-y-0">
         <div className="flex items-center gap-2.5">
@@ -144,13 +148,14 @@ export const HourlyTrendWidget: React.FC<HourlyTrendWidgetProps> = ({
               }
             />
 
-            {/* 平滑渐变曲线 */}
+            {/* 平滑渐变曲线：关闭 isAnimationActive 彻底消除 1500ms requestAnimationFrame 循环计算 */}
             <Area
               dataKey="minutes"
               type="monotone"
               fill="url(#trendGradient)"
               stroke="rgb(var(--primary))"
               strokeWidth={2}
+              isAnimationActive={false}
               dot={false}
               activeDot={{
                 r: 4,
@@ -167,10 +172,10 @@ export const HourlyTrendWidget: React.FC<HourlyTrendWidgetProps> = ({
       <CardFooter className="p-0 border-t border-border mt-0 pt-2 flex justify-between items-center text-xs font-mono text-muted-foreground">
         <span>峰值 {maxMinutes}m</span>
         <span className="flex items-center gap-1.5 text-xs text-foreground">
-          <span className="size-2 rounded-full bg-primary inline-block animate-pulse" />
+          <span className="size-2 rounded-full bg-primary inline-block" />
           实时走势
         </span>
       </CardFooter>
     </Card>
   );
-};
+});
