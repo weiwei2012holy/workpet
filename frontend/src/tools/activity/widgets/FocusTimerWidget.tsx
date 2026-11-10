@@ -217,7 +217,7 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
                   : "bg-primary/15 text-primary border border-primary/25"
               )}
             >
-              {/* 状态指示点：带柔和呼吸动画 */}
+              {/* 状态指示点：带柔和平缓呼吸动画 (2.5s 慢周期，不晃眼) */}
               {isPaused ? (
                 <span className="size-2 rounded-full bg-amber-500" />
               ) : isAway ? (
@@ -226,12 +226,18 @@ export const FocusTimerWidget: React.FC<FocusTimerWidgetProps> = ({
                 <span className="size-2 rounded-full bg-state-offduty" />
               ) : isReminding ? (
                 <span className="relative flex size-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75" />
+                  <span
+                    className="absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75"
+                    style={{ animation: "ping 2.5s cubic-bezier(0, 0, 0.2, 1) infinite" }}
+                  />
                   <span className="relative inline-flex rounded-full size-2 bg-destructive" />
                 </span>
               ) : (
                 <span className="relative flex size-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                  <span
+                    className="absolute inline-flex h-full w-full rounded-full bg-primary opacity-60"
+                    style={{ animation: "ping 2.5s cubic-bezier(0, 0, 0.2, 1) infinite" }}
+                  />
                   <span className="relative inline-flex rounded-full size-2 bg-primary" />
                 </span>
               )}
