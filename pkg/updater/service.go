@@ -1,7 +1,7 @@
 /**
  * @Author wei
- * @Date 2026-11-06
- * @Description 基于 GitHub Releases 的应用自更新服务模块，接入 Wails v3 原生 Updater 状态机，支持多平台原子替换与热重启
+ * @Date 2026-11-11
+ * @Description 基于 GitHub Releases 的应用自更新服务模块，接入 Wails v3 原生 Updater 状态机，配置 Headless 模式杜绝无更新时弹窗打扰
  **/
 
 package updater
@@ -105,11 +105,13 @@ func (s *Service) SetApp(app *application.App) {
 	providers = append(providers, webFallback)
 
 	// 4. 将 Provider 注册给 Wails v3 原生 Updater，启用内嵌公钥强验证（Fail-Closed 模式）
+	// 并显式配置 Window: WindowNone，使用 Headless 模式完全接入应用自身的前端 UI，彻底禁止弹窗
 	err = app.Updater.Init(wailsUpdater.Config{
 		CurrentVersion: s.currentVersion,
 		Providers:      providers,
-		CheckInterval:  6 * time.Hour,     // 每 6 小时后台静默轮询一次
-		PublicKey:      UpdaterPublicKey, // 🔒 注入 Ed25519 信任根，杜绝任何无签名或伪造更新
+		CheckInterval:  6 * time.Hour,          // 每 6 小时后台静默轮询一次
+		PublicKey:      UpdaterPublicKey,      // 🔒 注入 Ed25519 信任根，杜绝任何无签名或伪造更新
+		Window:         wailsUpdater.WindowNone, // 彻底禁止 Wails 自带的 Software Update 原生弹窗 (无更新时绝对静默)
 	})
 	if err != nil && err != wailsUpdater.ErrAlreadyConfigured {
 		log.Printf("[Updater] 初始化 Wails Updater 引擎失败: %v", err)
